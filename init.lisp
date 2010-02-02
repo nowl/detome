@@ -1,0 +1,22 @@
+(dolist (dir (directory "C:\\Documents and Settings\\mjp\\.sbcl\\systems\\*"))
+  (push dir asdf:*central-registry*))
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (require 'cffi))
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (push "c:\\Documents and Settings\\mjp\\Desktop\\incoming\\sdl_test\\" cffi:*foreign-library-directories*)
+  (asdf:oos 'asdf:load-op 'lispbuilder-sdl))
+
+(defun run-detome ()
+  (sdl:with-init ()
+	(sdl:window 320 240)
+	(dotimes (i 10000)
+	  (sdl:draw-pixel (sdl:point :x (random 320) :y (random 240))
+					  :color (sdl:color :r (random 256)
+										:g (random 256)
+										:b (random 256))))
+	(sdl:update-display)
+    (sdl:with-events ()
+      (:quit-event () t)
+      (:video-expose-event () (sdl:update-display)))))
