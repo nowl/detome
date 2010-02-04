@@ -8,5 +8,9 @@
   :licence "GNU Public License"
   :depends-on (black-engine)
   :components
-  ((:file "package"))
+  ((:file "package")
+   (:file "globals")
+   (:file "message")
+   (:file "actors")
+   (:file "level"))
   :serial t)

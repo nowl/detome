@@ -1,10 +1,23 @@
 (in-package #:black)
 
-(defun render (obj interpolation)
+(export '(add-to-render-list
+		  clear-render-list))
+
+(defun render-obj (obj interpolation)
   (declare (object obj)
-		   (single-float interpolation))
+	   (single-float interpolation))
   (let ((render-cb (render-cb obj)))
-	(and render-cb (funcall render-cb obj interpolation))))
+    (and render-cb (funcall render-cb obj interpolation))))
+
+(defun add-to-render-list (obj)
+  (declare ((or object simple-string) obj))
+  (pushnew (etypecase obj
+			 (simple-string (get-object-by-name obj))
+			 (object obj))
+		   *render-list*))
+
+(defun clear-render-list ()
+  (setf *render-list* nil))
 
 #|
 (defun add-to-render-list (type renderer)
