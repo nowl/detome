@@ -3,7 +3,9 @@
 (export '(object
           name
           get-object-by-name
-          remove-object))
+          remove-object
+	  update-cb
+	  update-cb-control))
 
 (defclass object ()
   ((name

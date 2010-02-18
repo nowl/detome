@@ -21,6 +21,13 @@
 (defvar *default-message-ttl-sec* 10
   "The default time to live for a message if a time is not provided.")
 
+
+(defvar *default-message-textarea-window* (list (* 32 (nth 2 *map-window*))
+						0
+						(- *screen-width* (* 32 (nth 2 *map-window*)))
+						*screen-height*)
+  "This defines the rightmost region of the screen where text messages may appear.")
+
 ;; fonts
 
 (defvar *primary-font* nil)

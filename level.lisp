@@ -93,6 +93,43 @@
     :walkable t
     :image "mountain")
 
+(defvar *message-area-rawtext* nil)
+(defvar *message-area-buffer* nil)
+(defun textarea-log (message-as-list 
+		     &key (location-func #'(lambda (log) (push log *message-area-rawtext*))) 
+		     (ttl *default-message-ttl-sec*))
+  (funcall location-func (cons ttl (list (append `((:color ,sdl:*white*)) message-as-list)))))
+
+(defun make-hover-message (x y width color alpha message-as-list &key fit-height (height black::*screen-height*))
+  (let ((raw-message (list (cons 1 (list (append `((:color ,sdl:*white*)) message-as-list)))))
+	strings
+	buffer)
+    (multiple-value-setq (strings buffer)
+      (update-message-strings
+       0.0
+       buffer
+       :rawtext raw-message
+       :message-textarea-window (list x y width height)))
+    ;; fix height if needed
+    (when fit-height
+      (let (min max)
+	(loop for x in strings do
+	     (if (and (consp x) (eq (first x) :render-at))
+		 (let ((h-cand (third x)))
+		   (cond ((null min) (setf min h-cand))
+			 ((null max) (setf max h-cand))
+			 (t (when (< h-cand min) (setf min h-cand))
+			    (when (> h-cand max) (setf max h-cand)))))))
+	(setf height (+ (- max min) *primary-font-height* (* 2 *message-textarea-height-offset-between-messages*)))))
+    (push
+     (list x y width height
+	   (etypecase color
+	     (string (hex-string-to-color color))
+	     (sdl:color color))
+	   alpha
+	   strings)
+     *hover-messages*)))
+
 (defun attenuation-lookup (x y map)
   (let* ((map-point (aref map y x))
          (att (map-cell-attenuation (gethash map-point *map-cells*))))
@@ -200,6 +237,12 @@
 							 (-1 "northwest"))))
 					   (:color ,sdl:*white*) "!"))))))
 
+
+(defun add-health-hover ()
+  (let ((text '((:color "ffffff") "This is a transparent hover test. Your hit points, mana, etc. will appear here. In " (:color "ff0000") "color!")))
+    (make-hover-message 10 10 (- (* 32 (nth 2 *map-window*)) 10) "00ffff" #x80 text :fit-height t)))
+
+
 (defun scroll-map-with-arrows-event (&key key &allow-other-keys)
   (cond ((sdl:key= key :sdl-key-a)
          (make-and-send-message 
@@ -233,6 +276,14 @@
 		      (move-map-window-if-needed)
                       (update-intensity-map (x *player*) (y *player*) 1.0)))
          t)
+	((sdl:key= key :sdl-key-h)
+         (make-and-send-message 
+          :sender "event processor" :receiver "global message receiver"
+          :action #'(lambda (sender receiver)
+		      (setf (update-cb-control (get-object-by-name "stat remover"))
+			    '(:seconds 4.0))
+		      (add-health-hover)))
+         t)
         (t nil)))
 
 
@@ -263,10 +314,19 @@
       (get-image (map-cell-image (gethash map-point *map-cells*))
                  :darken darken-amount))))
 
+(defgeneric get-screen-pos-of (obj)
+  (:documentation 
+   "Returns the screen position of the given object as x and y
+    values"))
+
+(defmethod get-screen-pos-of ((obj actor))
+  (values (* (- (x obj) (first *map-window*)) 32)
+	  (* (- (y obj) (second *map-window*)) 32)))
+
+
 (defun draw-player (interpolation)  
-  (sdl:draw-surface-at-* (get-image "player-front")
-                         (* (- (x *player*) (first *map-window*)) 32)
-                         (* (- (y *player*) (second *map-window*)) 32)))
+  (multiple-value-bind (x y) (get-screen-pos-of *player*)
+  (sdl:draw-surface-at-* (get-image "player-front") x y)))
 
 (defun draw-background (interpolation)
   (destructuring-bind (map-width map-height) (array-dimensions *level*)
@@ -277,30 +337,47 @@
                                                                    (+ (fourth *map-window*)
                                                                       (second *map-window*))) do
               (sdl:draw-surface-at-* (image-from-map x y)
+				     
                                      (* (- x (first *map-window*)) 32)
                                      (* (- y (second *map-window*)) 32))))))
 
-(defun draw-message-textarea (interpolation)
+(defvar *message-area-strings* nil)
+
+(defun draw-message-textarea (strings interpolation)
   (let (pos-x pos-y (color (sdl:color :r #xff :g #xff :b #xff)))
-    (loop for message in *message-area-strings* do
+    (loop for message in strings do
 	 (etypecase message
 	   (cons (ecase (car message)
 		   (:render-at (setf pos-x (second message)
 				     pos-y (third message)))
 		   (:color (setf color (second message)))))
 	   (string
-	    (sdl:draw-string-shaded-* message
-				      pos-x
-				      pos-y
-				      color
-				      sdl:*black* :font *primary-font*))))))
+	    (sdl:draw-string-solid-* message
+				     pos-x
+				     pos-y
+				     :color color
+				     :font *primary-font*))))))
+
+(defvar *hover-messages* nil
+  "Hover messages is a list with each entry containing of list of x
+  and y locations, width and height, box color and alpha, and text to
+  display in the form of formatted strings used by the message.")
+(defun draw-hover-messages (interpolation)
+  (loop for hover-message in *hover-messages* do
+       (destructuring-bind (x y width height color alpha strings) hover-message
+	 (draw-message-textarea strings interpolation)
+	 (let ((rect-surf (sdl:create-surface width height :alpha alpha)))
+	   (sdl:flood-fill-* 0 0 :surface rect-surf :color color)
+	   (sdl:draw-surface-at-* rect-surf x y)))))
 
 (define-object
     :name "primary renderer"
   :render-cb #'(lambda (obj interpolation)
                  (draw-background interpolation)
                  (draw-player interpolation)
-		 (draw-message-textarea interpolation)))
+		 (draw-hover-messages interpolation)
+		 (draw-message-textarea *message-area-strings* interpolation)))
+
 
 (define-object
     :name "render updater"
@@ -308,17 +385,23 @@
 		 (setf *primary-font* (sdl:initialise-default-font *primary-font-name*))
 		 (sdl:enable-alpha t :surface sdl:*default-display*)
 		 (sdl:enable-alpha t :surface sdl:*default-surface*)
+                 (sdl:disable-key-repeat)
                  (sdl:enable-key-repeat 200 50)
                  (define-images)         
                  (clear-explored-map)
-                 (clear-render-list)
-        		 (add-to-render-list "primary renderer"))
+                 (clear-render-list)		 
+		 (add-to-render-list "primary renderer"))
   :update-cb-control :one-shot)
 
 (define-object
     :name "message textarea updater"
   :update-cb #'(lambda (obj)
-		 (funcall #'update-message-strings (second (black::update-cb-control obj))))
+		 (multiple-value-setq (*message-area-strings* *message-area-buffer*)
+		   (update-message-strings
+		    (second (black::update-cb-control obj))
+		    *message-area-buffer*
+		    :rawtext *message-area-rawtext*))
+		 (setf *message-area-rawtext* nil))
   :update-cb-control '(:seconds 0.1))
                  
 (define-object
@@ -338,9 +421,19 @@
 (define-object :name "event processor")
 
 (define-object :name "global message receiver"
-  :update-cb-control '(:ticks 2))
+  :update-cb-control '(:ticks 1))
 
+(defvar *stats-visible* t)
+(define-object
+    :name "stat remover"
+  :update-cb #'(lambda (obj)
+		 ;; TODO fix this so it only removes the stats hover
+		 ;; message not all of them
+		 (setf *hover-messages* nil)
+		 (setf (update-cb-control obj) :none))
+  :update-cb-control :none)
+		 
 (defun detome ()
-  (textarea-log '("Welcome to " (:color "ff0000") "Detome" (:color "ffffff") "! The goal of this game is to hunt down the dark wizard Varlok and having some good looting fun on the way.")
+  (textarea-log '("Welcome to " (:color "ff0000") "Detome" (:color "ffffff") "! The goal of this game is to hunt down the dark wizard Varlok and have some good looting fun on the way.")
 		:ttl 20)
   (mainloop))
