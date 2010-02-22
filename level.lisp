@@ -117,11 +117,12 @@
   width height
   box-color alpha
   draw-rect
+  ttl
   formatted-strings)
-(defun make-hover-message (x y width color alpha message-as-list &key mover (draw-rect t) fit-height (height black::*screen-height*))
+(defun make-hover-message (x y width color alpha message-as-list &key mover ttl (draw-rect t) fit-height (height black::*screen-height*))
   (let ((raw-message (list (cons 1 (list (append `((:color ,sdl:*white*)) message-as-list)))))
-	strings
-	buffer)
+		strings
+		buffer)
     (multiple-value-setq (strings buffer)
       (update-message-strings
        0.0
@@ -131,14 +132,14 @@
     ;; fix height if needed
     (when fit-height
       (let (min max)
-	(loop for x in strings do
-	     (if (and (consp x) (eq (first x) :render-at))
-		 (let ((h-cand (third x)))
-		   (cond ((null min) (setf min h-cand))
-			 ((null max) (setf max h-cand))
-			 (t (when (< h-cand min) (setf min h-cand))
-			    (when (> h-cand max) (setf max h-cand)))))))
-	(setf height (+ (- max min) *primary-font-height* (* 2 *message-textarea-height-offset-between-messages*)))))
+		(loop for x in strings do
+			 (if (and (consp x) (eq (first x) :render-at))
+				 (let ((h-cand (third x)))
+				   (cond ((null min) (setf min h-cand))
+						 ((null max) (setf max h-cand))
+						 (t (when (< h-cand min) (setf min h-cand))
+							(when (> h-cand max) (setf max h-cand)))))))
+		(setf height (+ (- max min) *primary-font-height* (* 2 *message-textarea-height-offset-between-messages*)))))
     (push
 	 (make-hover :x x
 				 :y y
@@ -150,6 +151,7 @@
 							  (sdl:color color))
 				 :alpha alpha
 				 :draw-rect draw-rect
+				 :ttl ttl
 				 :formatted-strings strings)
      *hover-messages*)))
 
@@ -264,11 +266,11 @@
   (declare (actor actor))
   (let ((text `((:color "ff0000") ,(write-to-string amount)))
 		(x-y (multiple-value-list (get-screen-pos-of actor))))
-    (make-hover-message (nth 0 x-y) (nth 1 x-y) 100 "ff0000" #xa0 text :mover (list nil -4) :draw-rect nil :fit-height t)))
+    (make-hover-message (nth 0 x-y) (nth 1 x-y) 100 "ff0000" #xa0 text :mover (list nil -3) :ttl 8 :draw-rect nil :fit-height t)))
 
 (defun add-health-hover ()
   (let ((text '((:color "ffffff") "This is a transparent hover test. Your hit points, mana, etc. will appear here. In " (:color "ff0000") "color!")))
-    (make-hover-message 10 10 (- (* 32 (nth 2 *map-window*)) 10) "00ffff" #x80 text :mover (list nil 4) :draw-rect nil :fit-height t)))
+    (make-hover-message 10 10 (- (* 32 (nth 2 *map-window*)) 10) "00ffff" #x80 text :ttl 100 :mover (list nil 4) :draw-rect nil :fit-height t)))
 
 (defun scroll-map-with-arrows-event (&key key &allow-other-keys)
   (cond ((sdl:key= key :sdl-key-a)
@@ -318,18 +320,13 @@
          (make-and-send-message 
           :sender "event processor" :receiver "global message receiver"
           :action #'(lambda (sender receiver)
-					  (setf (update-cb-control (get-object-by-name "stat remover"))
-			    '(:seconds 4.0))
-		      (add-health-hover)))
+					  (add-health-hover)))
          t)
 		((sdl:key= key :sdl-key-j)
          (make-and-send-message
           :sender "event processor" :receiver "global message receiver"
           :action #'(lambda (sender receiver)
 					  (add-damage-hover *player* -5)))
-					   ;(setf (update-cb-control (get-object-by-name "stat remover"))
-					;		 '(:seconds 4.0))
-					;   (add-health-hover)))
          t)
         (t nil)))
 
@@ -483,17 +480,21 @@
 (define-object :name "global message receiver"
   :update-cb-control '(:ticks 1))
 
-(defvar *stats-visible* t)
 (define-object
-    :name "stat remover"
+    :name "hover remover"
   :update-cb #'(lambda (obj)
-		 ;; TODO fix this so it only removes the stats hover
-		 ;; message not all of them
-		 (setf *hover-messages* nil)
-		 (setf (update-cb-control obj) :none))
-  :update-cb-control :none)
+				 (let (hovers-to-remove)
+				   (dolist (hover *hover-messages*)
+					 (when (hover-ttl hover)
+					   (decf (hover-ttl hover))
+					   (and (<= (hover-ttl hover) 0)
+							(push hover hovers-to-remove))))
+				   (dolist (hover hovers-to-remove)
+					 (setf *hover-messages* (delete hover *hover-messages* :test #'eq)))))
+  :update-cb-control '(:ticks 1))
 		 
 (defun detome ()
   (textarea-log '("Welcome to " (:color "ff0000") "Detome" (:color "ffffff") "! The goal of this game is to hunt down the dark wizard Varlok and have some good looting fun on the way.")
 		:ttl 20)
   (mainloop))
+
