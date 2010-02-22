@@ -274,9 +274,19 @@
           :action #'(lambda (sender receiver)
 		      (attempt-move-player 0 -1)
 		      (move-map-window-if-needed)
-                      (update-intensity-map (x *player*) (y *player*) 1.0)))
+			  (update-intensity-map (x *player*) (y *player*) 1.0)))
          t)
-	((sdl:key= key :sdl-key-h)
+		((sdl:key= key :sdl-key-r)
+         (make-and-send-message
+          :sender "event processor" :receiver "global message receiver"
+          :action #'(lambda (sender receiver)
+					  (mid-displace 10 10 :array *level* :roughness 10.0 :post-filter-func #'(lambda (val)
+																							   (if (> val 0.5)
+																								   2
+																								   0)))
+					  (update-intensity-map (x *player*) (y *player*) 1.0)))
+         t)
+		((sdl:key= key :sdl-key-h)
          (make-and-send-message 
           :sender "event processor" :receiver "global message receiver"
           :action #'(lambda (sender receiver)
