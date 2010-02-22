@@ -58,6 +58,7 @@
 (defvar *explored-map* (funcall #'make-array (array-dimensions *level*)))
 
 (defvar *player* (make-instance 'player :x 1 :y 1))
+(defvar *monsters-in-level* nil)
 
 (defvar *map-cells-by-number* (make-hash-table :test #'eq))
 (defvar *map-cells-by-name* (make-hash-table :test #'equal))
@@ -372,6 +373,13 @@
   (multiple-value-bind (x y) (get-screen-pos-of *player*)
   (sdl:draw-surface-at-* (get-image "player-front") x y)))
 
+(defun draw-monsters (interpolation)  
+  (dolist (mon *monsters-in-level*)
+	(multiple-value-bind (x y) (get-screen-pos-of mon)
+	  (let ((darken-amount (clip (- 1 (total-intensity-at-point (x mon) (y mon)))
+								 0.0 1.0)))
+		(sdl:draw-surface-at-* (get-image (image-name mon) :darken darken-amount) x y)))))
+
 (defun draw-background (interpolation)
   (destructuring-bind (map-width map-height) (array-dimensions *level*)
     (loop for x from (max (first *map-window*) 0) below (min map-width
@@ -381,7 +389,7 @@
                                                                    (+ (fourth *map-window*)
                                                                       (second *map-window*))) do
               (sdl:draw-surface-at-* (image-from-map x y)
-				     
+									 
                                      (* (- x (first *map-window*)) 32)
                                      (* (- y (second *map-window*)) 32))))))
 
@@ -414,10 +422,18 @@
     :name "primary renderer"
   :render-cb #'(lambda (obj interpolation)
                  (draw-background interpolation)
+                 (draw-monsters interpolation)
                  (draw-player interpolation)
-		 (draw-hover-messages interpolation)
-		 (draw-message-textarea *message-area-strings* interpolation)))
+				 (draw-hover-messages interpolation)
+				 (draw-message-textarea *message-area-strings* interpolation)))
 
+
+(defun populate-monsters ()
+  (loop for x below (+ 10 (random (array-dimension *level* 0)) ) do
+	   (push (get-random-monster (random (array-dimension *level* 1))
+								 (random (array-dimension *level* 0))
+								 1 10)
+			 *monsters-in-level*)))
 
 (define-object
     :name "render updater"
@@ -430,6 +446,7 @@
 		 (define-images)         
 		 (clear-explored-map)
 		 (clear-render-list)		 
+		 (populate-monsters)
 		 (add-to-render-list "primary renderer"))
   :update-cb-control :one-shot)
 

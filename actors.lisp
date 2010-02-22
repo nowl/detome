@@ -1,6 +1,6 @@
 (in-package #:detome)
 
-(defclass actor ()
+(defclass actor (object)
   ((x 
     :initarg :x :accessor x :type fixnum :documentation 
     "The x position of the actor on the map.")
