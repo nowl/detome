@@ -12,5 +12,6 @@
    (:file "globals")
    (:file "message")
    (:file "actors")
+   (:file "items")
    (:file "level"))
   :serial t)
