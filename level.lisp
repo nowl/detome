@@ -59,20 +59,26 @@
 
 (defvar *player* (make-instance 'player :x 1 :y 1))
 
-(defvar *map-cells* (make-hash-table :test #'eq))
+(defvar *map-cells-by-number* (make-hash-table :test #'eq))
+(defvar *map-cells-by-name* (make-hash-table :test #'equal))
 
 (defstruct map-cell
   number
+  name
   attenuation
   walkable
   image)
 
-(defmacro define-map-cell (number &key attenuation walkable image)
-  `(setf (gethash ,number *map-cells*)
-         (make-map-cell :number ,number
+(defmacro define-map-cell (number name &key attenuation walkable image)
+  (let ((cell (gensym)))
+	`(let ((,cell (make-map-cell :number ,number
                         :attenuation ,attenuation
-			:walkable ,walkable
+						:walkable ,walkable
                         :image ,image)))
+	   (setf (gethash ,number *map-cells-by-number*)
+			 ,cell
+			 (gethash ,name *map-cells-by-name*)
+			 ,cell))))
 
 (defun define-images ()
   (define-image "plain" "data/tileset.png" '(1 1 32 32))
@@ -81,14 +87,17 @@
   (define-image "player-front" "data/tileset.png" '(1 34 32 32)))
 
 (define-map-cell 0
+	"plain"
     :attenuation '(0.1 :dark 0.6)
     :walkable t
     :image "plain")
 (define-map-cell 1
+	"wall"
     :attenuation 1.0
     :walkable nil
     :image "wall")
 (define-map-cell 2
+	"mountain"
     :attenuation '(0.75 :dark 0.9)
     :walkable t
     :image "mountain")
@@ -132,7 +141,7 @@
 
 (defun attenuation-lookup (x y map)
   (let* ((map-point (aref map y x))
-         (att (map-cell-attenuation (gethash map-point *map-cells*))))
+         (att (map-cell-attenuation (gethash map-point *map-cells-by-number*))))
     (etypecase att
       (float att)
       (cons (let ((res (member *weather* att)))
@@ -214,7 +223,7 @@
     (unless (and (>= x 0) (>= y 0) (< x level-width) (< y level-height))
       (return-from walkable nil)))      
   (let* ((map-point (aref *level* y x)))
-    (map-cell-walkable (gethash map-point *map-cells*))))
+    (map-cell-walkable (gethash map-point *map-cells-by-number*))))
 
 (defun attempt-move-player (delta-x delta-y)
   (with-slots (x y) *player*
@@ -280,10 +289,11 @@
          (make-and-send-message
           :sender "event processor" :receiver "global message receiver"
           :action #'(lambda (sender receiver)
-					  (mid-displace 10 10 :array *level* :roughness 10.0 :post-filter-func #'(lambda (val)
-																							   (if (> val 0.5)
-																								   2
-																								   0)))
+					  (mid-displace 10 10 :array *level* :roughness 100.0 
+									:post-filter-func #'(lambda (val)
+														  (if (> val 0.75)
+															  (map-cell-number (gethash "mountain" *map-cells-by-name*))
+															  (map-cell-number (gethash "plain" *map-cells-by-name*)))))
 					  (update-intensity-map (x *player*) (y *player*) 1.0)))
          t)
 		((sdl:key= key :sdl-key-h)
@@ -321,7 +331,7 @@
   (let ((darken-amount (clip (- 1 (total-intensity-at-point x y))
                              0.0 1.0)))
     (let ((map-point (aref *level* y x)))
-      (get-image (map-cell-image (gethash map-point *map-cells*))
+      (get-image (map-cell-image (gethash map-point *map-cells-by-number*))
                  :darken darken-amount))))
 
 (defgeneric get-screen-pos-of (obj)
