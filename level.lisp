@@ -109,6 +109,15 @@
 		     (ttl *default-message-ttl-sec*))
   (funcall location-func (cons ttl (list (append `((:color ,sdl:*white*)) message-as-list)))))
 
+(defvar *hover-messages* nil
+  "Hover messages is a list of hover messages in progress.")
+(defstruct hover
+  x y
+  mover
+  width height
+  box-color alpha
+  draw-rect
+  formatted-strings)
 (defun make-hover-message (x y width color alpha message-as-list &key mover (draw-rect t) fit-height (height black::*screen-height*))
   (let ((raw-message (list (cons 1 (list (append `((:color ,sdl:*white*)) message-as-list)))))
 	strings
@@ -131,13 +140,17 @@
 			    (when (> h-cand max) (setf max h-cand)))))))
 	(setf height (+ (- max min) *primary-font-height* (* 2 *message-textarea-height-offset-between-messages*)))))
     (push
-     (list x y mover width height
-	   (etypecase color
-	     (string (hex-string-to-color color))
-	     (sdl:color color))
-	   alpha
-	   draw-rect
-	   strings)
+	 (make-hover :x x
+				 :y y
+				 :mover mover
+				 :width width
+				 :height height
+				 :box-color (etypecase color
+							  (string (hex-string-to-color color))
+							  (sdl:color color))
+				 :alpha alpha
+				 :draw-rect draw-rect
+				 :formatted-strings strings)
      *hover-messages*)))
 
 (defun attenuation-lookup (x y map)
@@ -247,11 +260,15 @@
 							 (-1 "northwest"))))
 					   (:color ,sdl:*white*) "!"))))))
 
+(defun add-damage-hover (actor amount)
+  (declare (actor actor))
+  (let ((text `((:color "ff0000") ,(write-to-string amount)))
+		(x-y (multiple-value-list (get-screen-pos-of actor))))
+    (make-hover-message (nth 0 x-y) (nth 1 x-y) 100 "ff0000" #xa0 text :mover (list nil -4) :draw-rect nil :fit-height t)))
 
 (defun add-health-hover ()
   (let ((text '((:color "ffffff") "This is a transparent hover test. Your hit points, mana, etc. will appear here. In " (:color "ff0000") "color!")))
     (make-hover-message 10 10 (- (* 32 (nth 2 *map-window*)) 10) "00ffff" #x80 text :mover (list nil 4) :draw-rect nil :fit-height t)))
-
 
 (defun scroll-map-with-arrows-event (&key key &allow-other-keys)
   (cond ((sdl:key= key :sdl-key-a)
@@ -301,9 +318,18 @@
          (make-and-send-message 
           :sender "event processor" :receiver "global message receiver"
           :action #'(lambda (sender receiver)
-		      (setf (update-cb-control (get-object-by-name "stat remover"))
+					  (setf (update-cb-control (get-object-by-name "stat remover"))
 			    '(:seconds 4.0))
 		      (add-health-hover)))
+         t)
+		((sdl:key= key :sdl-key-j)
+         (make-and-send-message
+          :sender "event processor" :receiver "global message receiver"
+          :action #'(lambda (sender receiver)
+					  (add-damage-hover *player* -5)))
+					   ;(setf (update-cb-control (get-object-by-name "stat remover"))
+					;		 '(:seconds 4.0))
+					;   (add-health-hover)))
          t)
         (t nil)))
 
@@ -379,20 +405,13 @@
 				     :color color
 				     :font *primary-font*))))))
 
-(defvar *hover-messages* nil
-  "Hover messages is a list with each entry containing of list of x
-  and y locations, mover info, width and height, box color and alpha,
-  whether to draw the rect, and text to display in the form of
-  formatted strings used by the message.")
 (defun draw-hover-messages (interpolation)
-  (loop for hover-message in *hover-messages* do
-       (destructuring-bind (x y mover width height color alpha draw-box strings) hover-message
-		 (declare (ignore mover))
-		 (draw-message-textarea strings interpolation)
-		 (when draw-box
-		   (let ((rect-surf (sdl:create-surface width height :alpha alpha)))
-			 (sdl:flood-fill-* 0 0 :surface rect-surf :color color)
-			 (sdl:draw-surface-at-* rect-surf x y))))))
+  (loop for hover in *hover-messages* do
+	   (draw-message-textarea (hover-formatted-strings hover) interpolation)
+	   (when (hover-draw-rect hover)
+		 (let ((rect-surf (sdl:create-surface (hover-width hover) (hover-height hover) :alpha (hover-alpha hover))))
+		   (sdl:flood-fill-* 0 0 :surface rect-surf :color (hover-box-color hover))
+		   (sdl:draw-surface-at-* rect-surf (hover-x hover) (hover-y hover))))))
 
 (define-object
     :name "primary renderer"
@@ -433,8 +452,8 @@
     :name "hover mover updater"
   :update-cb #'(lambda (obj)
 				 (loop for hover in *hover-messages* do
-					  (destructuring-bind (move-x move-y) (third hover)
-						(loop for string in (nth 8 hover) do
+					  (destructuring-bind (move-x move-y) (hover-mover hover)
+						(loop for string in (hover-formatted-strings hover) do
 							 (when (and move-x
 										(typep string 'cons)
 										(eq :render-at (first string)))
