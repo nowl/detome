@@ -27,7 +27,7 @@
 	"The monster-type's ai callback.")))	  
 
 (defclass monster (actor)
-  ((type :initarg :type :accessor type :type monster-type)
+  ((mon-type :initarg :mon-type :accessor mon-type :type monster-type)
    (image-name :initarg :image-name :accessor image-name :type simple-string)))
 
 (defun create-monster-from-type (x y type)
@@ -35,7 +35,7 @@
   (make-instance 'monster :x x :y y
 				 :name (name type)
 				 :image-name (image-name type)
-				 :type type
+				 :mon-type type
 				 :level (level type)
 				 :hp (funcall (hp-gen type))
 				 :att-r (funcall (att-r-gen type))

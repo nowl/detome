@@ -57,7 +57,7 @@
 (defvar *intensity-map* (funcall #'make-array (array-dimensions *level*)))
 (defvar *explored-map* (funcall #'make-array (array-dimensions *level*)))
 
-(defvar *player* (make-instance 'player :x 1 :y 1))
+(defvar *player* (make-instance 'player :name "player" :x 1 :y 1))
 (defvar *monsters-in-level* nil)
 
 (defvar *map-cells-by-number* (make-hash-table :test #'eq))
@@ -313,7 +313,7 @@
 					  (mid-displace 10 10 :array *level* :roughness 100.0 
 									:post-filter-func #'(lambda (val)
 														  (if (> val 0.75)
-															  (map-cell-number (gethash "mountain" *map-cells-by-name*))
+															  (map-cell-number (gethash "wall" *map-cells-by-name*))
 															  (map-cell-number (gethash "plain" *map-cells-by-name*)))))
 					  (update-intensity-map (x *player*) (y *player*) 1.0)))
          t)
@@ -347,10 +347,10 @@
 (defun total-intensity-at-point (x y)
   (let ((map-int (los-intensity-at-point x y)))
     (if (plusp map-int)
-	;; if the LOS includes this point then only return it's intensity
-	map-int
-	;; otherwise return the explored map intensity
-	(aref *explored-map* y x))))
+        ;; if the LOS includes this point then only return it's intensity
+        map-int
+        ;; otherwise return the explored map intensity
+        0)))(aref *explored-map* y x))))
 
 (defun image-from-map (x y)
   (let ((darken-amount (clip (- 1 (total-intensity-at-point x y))
@@ -513,5 +513,5 @@
 (defun detome ()
   (textarea-log '("Welcome to " (:color "ff0000") "Detome" (:color "ffffff") "! The goal of this game is to hunt down the dark wizard Varlok and have some good looting fun on the way.")
 		:ttl 20)
-  (mainloop))
+  (mainloop)); :sdl-flags sdl:sdl-fullscreen))
 
