@@ -350,7 +350,7 @@
         ;; if the LOS includes this point then only return it's intensity
         map-int
         ;; otherwise return the explored map intensity
-        0)))(aref *explored-map* y x))))
+        (aref *explored-map* y x))))
 
 (defun image-from-map (x y)
   (let ((darken-amount (clip (- 1 (total-intensity-at-point x y))
@@ -430,10 +430,10 @@
 
 (defun populate-monsters ()
   (loop for x below (+ 10 (random (array-dimension *level* 0)) ) do
-	   (push (get-random-monster (random (array-dimension *level* 1))
-								 (random (array-dimension *level* 0))
-								 1 10)
-			 *monsters-in-level*)))
+       (push (get-random-monster (random (array-dimension *level* 1))
+                                 (random (array-dimension *level* 0))
+                                 1 10)
+             *monsters-in-level*)))
 
 (define-object
     :name "render updater"
@@ -511,6 +511,8 @@
   :update-cb-control '(:ticks 1))
 		 
 (defun detome ()
+  (sdl:disable-key-repeat)
+  (sdl:enable-key-repeat 200 50)
   (textarea-log '("Welcome to " (:color "ff0000") "Detome" (:color "ffffff") "! The goal of this game is to hunt down the dark wizard Varlok and have some good looting fun on the way.")
 		:ttl 20)
   (mainloop)); :sdl-flags sdl:sdl-fullscreen))
