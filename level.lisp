@@ -57,7 +57,14 @@
 (defvar *intensity-map* (funcall #'make-array (array-dimensions *level*)))
 (defvar *explored-map* (funcall #'make-array (array-dimensions *level*)))
 
-(defvar *player* (make-instance 'player :name "player" :x 1 :y 1))
+(defvar *player* (make-instance 'player
+                                :name "player"
+                                :x 1
+                                :y 1
+                                :hp 10
+                                :att-r '(1 5)
+                                :dmg-r '(1 4)
+                                :def-r '(1 5)))
 (defvar *monsters-in-level* nil)
 
 (defvar *map-cells-by-number* (make-hash-table :test #'eq))
@@ -72,14 +79,14 @@
 
 (defmacro define-map-cell (number name &key attenuation walkable image)
   (let ((cell (gensym)))
-	`(let ((,cell (make-map-cell :number ,number
-                        :attenuation ,attenuation
-						:walkable ,walkable
-                        :image ,image)))
-	   (setf (gethash ,number *map-cells-by-number*)
-			 ,cell
-			 (gethash ,name *map-cells-by-name*)
-			 ,cell))))
+    `(let ((,cell (make-map-cell :number ,number
+                                 :attenuation ,attenuation
+                                 :walkable ,walkable
+                                 :image ,image)))
+       (setf (gethash ,number *map-cells-by-number*)
+             ,cell
+             (gethash ,name *map-cells-by-name*)
+             ,cell))))
 
 (defun define-images ()
   (define-image "plain" "data/tileset.png" '(1 1 32 32))
@@ -88,20 +95,20 @@
   (define-image "player-front" "data/tileset.png" '(1 34 32 32)))
 
 (define-map-cell 0
-	"plain"
-    :attenuation '(0.1 :dark 0.6)
-    :walkable t
-    :image "plain")
+    "plain"
+  :attenuation '(0.1 :dark 0.6)
+  :walkable t
+  :image "plain")
 (define-map-cell 1
-	"wall"
-    :attenuation 1.0
-    :walkable nil
-    :image "wall")
+    "wall"
+  :attenuation 1.0
+  :walkable nil
+  :image "wall")
 (define-map-cell 2
-	"mountain"
-    :attenuation '(0.75 :dark 0.9)
-    :walkable t
-    :image "mountain")
+    "mountain"
+  :attenuation '(0.75 :dark 0.9)
+  :walkable t
+  :image "mountain")
 
 (defvar *message-area-rawtext* nil)
 (defvar *message-area-buffer* nil)
@@ -122,8 +129,8 @@
   formatted-strings)
 (defun make-hover-message (x y width color alpha message-as-list &key mover ttl (draw-rect t) fit-height (height black::*screen-height*))
   (let ((raw-message (list (cons 1 (list (append `((:color ,sdl:*white*)) message-as-list)))))
-		strings
-		buffer)
+        strings
+        buffer)
     (multiple-value-setq (strings buffer)
       (update-message-strings
        0.0
@@ -133,27 +140,27 @@
     ;; fix height if needed
     (when fit-height
       (let (min max)
-		(loop for x in strings do
-			 (if (and (consp x) (eq (first x) :render-at))
-				 (let ((h-cand (third x)))
-				   (cond ((null min) (setf min h-cand))
-						 ((null max) (setf max h-cand))
-						 (t (when (< h-cand min) (setf min h-cand))
-							(when (> h-cand max) (setf max h-cand)))))))
-		(setf height (+ (- max min) *primary-font-height* (* 2 *message-textarea-height-offset-between-messages*)))))
+        (loop for x in strings do
+             (if (and (consp x) (eq (first x) :render-at))
+                 (let ((h-cand (third x)))
+                   (cond ((null min) (setf min h-cand))
+                         ((null max) (setf max h-cand))
+                         (t (when (< h-cand min) (setf min h-cand))
+                            (when (> h-cand max) (setf max h-cand)))))))
+        (setf height (+ (- max min) *primary-font-height* (* 2 *message-textarea-height-offset-between-messages*)))))
     (push
-	 (make-hover :x x
-				 :y y
-				 :mover mover
-				 :width width
-				 :height height
-				 :box-color (etypecase color
-							  (string (hex-string-to-color color))
-							  (sdl:color color))
-				 :alpha alpha
-				 :draw-rect draw-rect
-				 :ttl ttl
-				 :formatted-strings strings)
+     (make-hover :x x
+                 :y y
+                 :mover mover
+                 :width width
+                 :height height
+                 :box-color (etypecase color
+                              (string (hex-string-to-color color))
+                              (sdl:color color))
+                 :alpha alpha
+                 :draw-rect draw-rect
+                 :ttl ttl
+                 :formatted-strings strings)
      *hover-messages*)))
 
 (defun attenuation-lookup (x y map)
@@ -242,32 +249,66 @@
   (let* ((map-point (aref *level* y x)))
     (map-cell-walkable (gethash map-point *map-cells-by-number*))))
 
-(defun attempt-move-player (delta-x delta-y)
-  (with-slots (x y) *player*
-    (let ((new-x (+ x delta-x))
-	  (new-y (+ y delta-y)))
-      (if (walkable new-x new-y)
-	  (setf x new-x y new-y)
-	  (textarea-log `("Blocked going " (:color "0000ff") 
-					   ,(ecase delta-x
-						   (1 (ecase delta-y
-							(0 "east")
-							(1 "southeast")
-							(-1 "northeast")))
-						   (0 (ecase delta-y
-							(1 "south")
-							(-1 "north")))
-						   (-1 (ecase delta-y
-							 (1 "southwest")
-							 (0 "west")
-							 (-1 "northwest"))))
-					   (:color ,sdl:*white*) "!"))))))
-
 (defun add-damage-hover (actor amount)
   (declare (actor actor))
-  (let ((text `((:color "ff0000") ,(write-to-string amount)))
-		(x-y (multiple-value-list (get-screen-pos-of actor))))
-    (make-hover-message (nth 0 x-y) (nth 1 x-y) 100 "ff0000" #xa0 text :mover (list nil -3) :ttl 8 :draw-rect nil :fit-height t)))
+  (let ((text `((:color "ff0000") ,amount))
+        (x-y (multiple-value-list (get-screen-pos-of actor))))
+    (make-hover-message (+ 8 (nth 0 x-y)) (nth 1 x-y) 100 "ff0000" #xa0 text :mover (list nil -3) :ttl 8 :draw-rect nil :fit-height t)))
+
+(defun rand (max &optional (min 0))
+  (let ((diff (- max min))
+        (r (random 1.0)))
+    (if (<= diff 0) 
+        max
+        (+ min (* r diff)))))
+
+(defun hit (actor1 actor2 dmg)
+  (assert (eq actor1 *player*))
+  (let ((dmg-txt (format nil "~d" (round dmg))))
+    (cond ((> dmg 0)
+           (textarea-log `("hit " (:color "00ff00") ,(name actor2) (:color "ffffff") " for " (:color "0000ff") 
+                                  ,dmg-txt
+                                  (:color "ffffff") " damage"))
+           (add-damage-hover actor2 dmg-txt))
+          (t (textarea-log `((:color "ff0000") "missed " (:color "00ff00") ,(name actor2)))
+             (add-damage-hover actor2 "missed")))))
+  
+(defun attack (actor1 actor2)
+  (destructuring-bind (attmin attmax) (att-r actor1)
+    (destructuring-bind (defmin defmax) (def-r actor2)
+      (destructuring-bind (dmgmin dmgmax) (dmg-r actor1)
+        (let* ((a1-att (rand attmax attmin))
+               (a1-def (rand defmax defmin))
+               (dmg (rand dmgmax dmgmin)))
+          (hit actor1 actor2 (if (> a1-att a1-def) dmg 0)))))))
+
+(defun monsters-at (x y)
+  (loop for mon in *monsters-in-level* when (and (= (x mon) x) (= (y mon) y)) collect mon))
+
+(defun attempt-move-player (delta-x delta-y)
+  (with-slots (x y) *player*
+    (let* ((new-x (+ x delta-x))
+           (new-y (+ y delta-y))
+           (monsters (monsters-at new-x new-y)))
+      (cond ((not (walkable new-x new-y))
+             (textarea-log `("Blocked going " (:color "0000ff") 
+                                              ,(ecase delta-x
+                                                      (1 (ecase delta-y
+                                                           (0 "east")
+                                                           (1 "southeast")
+                                                           (-1 "northeast")))
+                                                      (0 (ecase delta-y
+                                                           (1 "south")
+                                                           (-1 "north")))
+                                                      (-1 (ecase delta-y
+                                                            (1 "southwest")
+                                                            (0 "west")
+                                                            (-1 "northwest"))))
+                                              (:color ,sdl:*white*) "!")))
+            (monsters (attack *player* (typecase monsters
+                                         (cons (first monsters))
+                                         (t monsters))))
+            (t (setf x new-x y new-y))))))
 
 (defun add-health-hover ()
   (let ((text '((:color "ffffff") "This is a transparent hover test. Your hit points, mana, etc. will appear here. In " (:color "ff0000") "color!")))
@@ -304,30 +345,32 @@
           :action #'(lambda (sender receiver)
 		      (attempt-move-player 0 -1)
 		      (move-map-window-if-needed)
-			  (update-intensity-map (x *player*) (y *player*) 1.0)))
+                      (update-intensity-map (x *player*) (y *player*) 1.0)))
          t)
-		((sdl:key= key :sdl-key-r)
+        ((sdl:key= key :sdl-key-r)
          (make-and-send-message
           :sender "event processor" :receiver "global message receiver"
           :action #'(lambda (sender receiver)
-					  (mid-displace 10 10 :array *level* :roughness 100.0 
-									:post-filter-func #'(lambda (val)
-														  (if (> val 0.75)
-															  (map-cell-number (gethash "wall" *map-cells-by-name*))
-															  (map-cell-number (gethash "plain" *map-cells-by-name*)))))
-					  (update-intensity-map (x *player*) (y *player*) 1.0)))
+                      (mid-displace 10 10 :array *level* :roughness 100.0 
+                                    :post-filter-func #'(lambda (val)
+                                                          (map-cell-number (gethash 
+                                                                            (cond ((> val 0.85) "wall")
+                                                                                  ((> val 0.65) "mountain")
+                                                                                  (t "plain"))
+                                                                            *map-cells-by-name*))))
+                      (update-intensity-map (x *player*) (y *player*) 1.0)))
          t)
-		((sdl:key= key :sdl-key-h)
+        ((sdl:key= key :sdl-key-h)
          (make-and-send-message 
           :sender "event processor" :receiver "global message receiver"
           :action #'(lambda (sender receiver)
-					  (add-health-hover)))
+                      (add-health-hover)))
          t)
-		((sdl:key= key :sdl-key-j)
+        ((sdl:key= key :sdl-key-j)
          (make-and-send-message
           :sender "event processor" :receiver "global message receiver"
           :action #'(lambda (sender receiver)
-					  (add-damage-hover *player* -5)))
+                      (add-damage-hover *player* -5)))
          t)
         (t nil)))
 
@@ -371,14 +414,15 @@
 
 (defun draw-player (interpolation)  
   (multiple-value-bind (x y) (get-screen-pos-of *player*)
-  (sdl:draw-surface-at-* (get-image "player-front") x y)))
+    (sdl:draw-surface-at-* (get-image "player-front") x y)))
 
 (defun draw-monsters (interpolation)  
   (dolist (mon *monsters-in-level*)
-	(multiple-value-bind (x y) (get-screen-pos-of mon)
-	  (let ((darken-amount (clip (- 1 (total-intensity-at-point (x mon) (y mon)))
-								 0.0 1.0)))
-		(sdl:draw-surface-at-* (get-image (image-name mon) :darken darken-amount) x y)))))
+    (multiple-value-bind (x y) (get-screen-pos-of mon)
+      (let ((darken-amount (clip (- 1 (los-intensity-at-point (x mon) (y mon)))
+                                 0.0 1.0)))
+        (when (< darken-amount 1.0)
+          (sdl:draw-surface-at-* (get-image (image-name mon) :darken darken-amount) x y))))))
 
 (defun draw-background (interpolation)
   (destructuring-bind (map-width map-height) (array-dimensions *level*)
@@ -389,7 +433,7 @@
                                                                    (+ (fourth *map-window*)
                                                                       (second *map-window*))) do
               (sdl:draw-surface-at-* (image-from-map x y)
-									 
+                                     
                                      (* (- x (first *map-window*)) 32)
                                      (* (- y (second *map-window*)) 32))))))
 
@@ -412,11 +456,11 @@
 
 (defun draw-hover-messages (interpolation)
   (loop for hover in *hover-messages* do
-	   (draw-message-textarea (hover-formatted-strings hover) interpolation)
-	   (when (hover-draw-rect hover)
-		 (let ((rect-surf (sdl:create-surface (hover-width hover) (hover-height hover) :alpha (hover-alpha hover))))
-		   (sdl:flood-fill-* 0 0 :surface rect-surf :color (hover-box-color hover))
-		   (sdl:draw-surface-at-* rect-surf (hover-x hover) (hover-y hover))))))
+       (draw-message-textarea (hover-formatted-strings hover) interpolation)
+       (when (hover-draw-rect hover)
+         (let ((rect-surf (sdl:create-surface (hover-width hover) (hover-height hover) :alpha (hover-alpha hover))))
+           (sdl:flood-fill-* 0 0 :surface rect-surf :color (hover-box-color hover))
+           (sdl:draw-surface-at-* rect-surf (hover-x hover) (hover-y hover))))))
 
 (define-object
     :name "primary renderer"
@@ -424,8 +468,8 @@
                  (draw-background interpolation)
                  (draw-monsters interpolation)
                  (draw-player interpolation)
-				 (draw-hover-messages interpolation)
-				 (draw-message-textarea *message-area-strings* interpolation)))
+                 (draw-hover-messages interpolation)
+                 (draw-message-textarea *message-area-strings* interpolation)))
 
 
 (defun populate-monsters ()
@@ -441,8 +485,7 @@
 		 (setf *primary-font* (sdl:initialise-default-font *primary-font-name*))
 		 (sdl:enable-alpha t :surface sdl:*default-display*)
 		 (sdl:enable-alpha t :surface sdl:*default-surface*)
-		 (sdl:disable-key-repeat)
-		 (sdl:enable-key-repeat 200 50)
+                 (sdl:enable-key-repeat 500 50)
 		 (define-images)         
 		 (clear-explored-map)
 		 (clear-render-list)		 
@@ -453,31 +496,37 @@
 (define-object
     :name "message textarea updater"
   :update-cb #'(lambda (obj)
-				 (multiple-value-setq (*message-area-strings* *message-area-buffer*)
-				   (update-message-strings
-					(second (black::update-cb-control obj))
-					*message-area-buffer*
-					:rawtext *message-area-rawtext*))
-				 (setf *message-area-rawtext* nil))
+                 (multiple-value-setq (*message-area-strings* *message-area-buffer*)
+                   (update-message-strings
+                    (second (black::update-cb-control obj))
+                    *message-area-buffer*
+                    :rawtext *message-area-rawtext*))
+                 (setf *message-area-rawtext* nil))
   :update-cb-control '(:seconds 0.1))
 
+(define-object
+    :name "monster updater"
+  :update-cb 
+  #'(lambda (obj)
+      (loop for monster in *monsters-in-level* do
+           (funcall (ai-cb (mon-type monster)) monster))))
 
 (define-object
     :name "hover mover updater"
   :update-cb #'(lambda (obj)
-				 (loop for hover in *hover-messages* do
-					  (destructuring-bind (move-x move-y) (hover-mover hover)
-						(loop for string in (hover-formatted-strings hover) do
-							 (when (and move-x
-										(typep string 'cons)
-										(eq :render-at (first string)))
-							   (setf (second string) (+ (second string) move-x)))
-							 (when (and move-y
-										(typep string 'cons)
-										(eq :render-at (first string)))
-							   (setf (third string) (+ (third string) move-y)))))))
+                 (loop for hover in *hover-messages* do
+                      (destructuring-bind (move-x move-y) (hover-mover hover)
+                        (loop for string in (hover-formatted-strings hover) do
+                             (when (and move-x
+                                        (typep string 'cons)
+                                        (eq :render-at (first string)))
+                               (setf (second string) (+ (second string) move-x)))
+                             (when (and move-y
+                                        (typep string 'cons)
+                                        (eq :render-at (first string)))
+                               (setf (third string) (+ (third string) move-y)))))))
   :update-cb-control '(:ticks 1))
-                 
+
 (define-object
     :name "weather builder"
   :update-cb #'(lambda (obj)
@@ -490,7 +539,7 @@
 				    (setf *weather* :clear)
 				    (textarea-log '("The shadows become slightly less threatening as night becomes day."))
 				    (update-intensity-map (x *player*) (y *player*) 1.0))))))
-  :update-cb-control `(:seconds ,*day-night-cycle-in-seconds*))
+  :update-cb-control :none);; `(:seconds ,*day-night-cycle-in-seconds*))
 
 (define-object :name "event processor")
 
@@ -500,19 +549,20 @@
 (define-object
     :name "hover remover"
   :update-cb #'(lambda (obj)
-				 (let (hovers-to-remove)
-				   (dolist (hover *hover-messages*)
-					 (when (hover-ttl hover)
-					   (decf (hover-ttl hover))
-					   (and (<= (hover-ttl hover) 0)
-							(push hover hovers-to-remove))))
-				   (dolist (hover hovers-to-remove)
-					 (setf *hover-messages* (delete hover *hover-messages* :test #'eq)))))
+                 (let (hovers-to-remove)
+                   (dolist (hover *hover-messages*)
+                     (when (hover-ttl hover)
+                       (decf (hover-ttl hover))
+                       (and (<= (hover-ttl hover) 0)
+                            (push hover hovers-to-remove))))
+                   (dolist (hover hovers-to-remove)
+                     (setf *hover-messages* (delete hover *hover-messages* :test #'eq)))))
   :update-cb-control '(:ticks 1))
-		 
+
 (defun detome ()
-  (sdl:disable-key-repeat)
-  (sdl:enable-key-repeat 200 50)
+  ;; reinit
+  (setf (update-cb-control (get-object-by-name "render updater")) :one-shot)
+
   (textarea-log '("Welcome to " (:color "ff0000") "Detome" (:color "ffffff") "! The goal of this game is to hunt down the dark wizard Varlok and have some good looting fun on the way.")
 		:ttl 20)
   (mainloop)); :sdl-flags sdl:sdl-fullscreen))

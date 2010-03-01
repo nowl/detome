@@ -1,7 +1,10 @@
 (in-package #:detome)
 
 (defclass actor (object)
-  ((x 
+  ((meta
+    :initarg :meta :initform nil :accessor meta :type list :documentation 
+    "An alist containing metadata for use with supporting functions.")
+   (x 
     :initarg :x :accessor x :type fixnum :documentation 
     "The x position of the actor on the map.")
    (y 

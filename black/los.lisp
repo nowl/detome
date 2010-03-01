@@ -51,6 +51,9 @@
               acc
               (nreverse acc)))))))
 
+;; This is to ensure that there are no diagonal leaps in the line. It
+;; tends to lead to less breakage in the LOS and makes it a bit more
+;; restrictive.
 (defun mod-bresenham (s-x s-y d-x d-y)
   (flet ((dist (p1 p2)
            (+ (abs (- (first p1) (first p2)))
