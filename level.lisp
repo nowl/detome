@@ -67,6 +67,11 @@
                                 :def-r '(1 5)))
 (defvar *monsters-in-level* nil)
 
+(defun clear-monsters-from-level ()
+  (loop for mon in *monsters-in-level* do
+       (remove-object (name mon)))
+  (setf *monsters-in-level* nil))
+
 (defvar *map-cells-by-number* (make-hash-table :test #'eq))
 (defvar *map-cells-by-name* (make-hash-table :test #'equal))
 
@@ -109,6 +114,14 @@
   :attenuation '(0.75 :dark 0.9)
   :walkable t
   :image "mountain")
+
+(defun take-turn ()
+  "Any objects that use :turns will have their number of turns incremented."
+  (loop for obj in black::*object-list* do
+       (with-slots (update-cb-control) obj
+         (when (and (consp update-cb-control) (eq (car update-cb-control) :turns))
+           (incf (second update-cb-control))))))
+
 
 (defvar *message-area-rawtext* nil)
 (defvar *message-area-buffer* nil)
@@ -266,11 +279,12 @@
   (assert (eq actor1 *player*))
   (let ((dmg-txt (format nil "~d" (round dmg))))
     (cond ((> dmg 0)
-           (textarea-log `("hit " (:color "00ff00") ,(name actor2) (:color "ffffff") " for " (:color "0000ff") 
+           (textarea-log `("hit " (:color "00ff00") ,(name (mon-type actor2)) (:color "ffffff") " for " (:color "0000ff") 
                                   ,dmg-txt
                                   (:color "ffffff") " damage"))
-           (add-damage-hover actor2 dmg-txt))
-          (t (textarea-log `((:color "ff0000") "missed " (:color "00ff00") ,(name actor2)))
+           (add-damage-hover actor2 dmg-txt)
+           (decf (hp actor2) dmg))
+          (t (textarea-log `((:color "ff0000") "missed " (:color "00ff00") ,(name (mon-type actor2))))
              (add-damage-hover actor2 "missed")))))
   
 (defun attack (actor1 actor2)
@@ -307,8 +321,10 @@
                                               (:color ,sdl:*white*) "!")))
             (monsters (attack *player* (typecase monsters
                                          (cons (first monsters))
-                                         (t monsters))))
-            (t (setf x new-x y new-y))))))
+                                         (t monsters)))
+                      (take-turn))
+            (t (setf x new-x y new-y)
+               (take-turn))))))
 
 (defun add-health-hover ()
   (let ((text '((:color "ffffff") "This is a transparent hover test. Your hit points, mana, etc. will appear here. In " (:color "ff0000") "color!")))
@@ -505,13 +521,6 @@
   :update-cb-control '(:seconds 0.1))
 
 (define-object
-    :name "monster updater"
-  :update-cb 
-  #'(lambda (obj)
-      (loop for monster in *monsters-in-level* do
-           (funcall (ai-cb (mon-type monster)) monster))))
-
-(define-object
     :name "hover mover updater"
   :update-cb #'(lambda (obj)
                  (loop for hover in *hover-messages* do
@@ -558,6 +567,18 @@
                    (dolist (hover hovers-to-remove)
                      (setf *hover-messages* (delete hover *hover-messages* :test #'eq)))))
   :update-cb-control '(:ticks 1))
+
+(defun remove-monster (monster)
+  (setf *monsters-in-level* (delete monster *monsters-in-level*))
+  (remove-object (name monster)))
+
+(define-object
+    :name "monster garbage collector"
+  :update-cb #'(lambda (obj)
+                 (dolist (mon *monsters-in-level*)
+                   (when (<= (hp mon) 0)
+                     (remove-monster mon)
+                     (textarea-log `((:color "00ff00") ,(name (mon-type mon)) (:color "ffffff") " dies!"))))))
 
 (defun detome ()
   ;; reinit

@@ -10,3 +10,4 @@
   (asdf:oos 'asdf:load-op 'lispbuilder-sdl-image))
 
 (asdf:oos 'asdf:load-op 'detome)
+

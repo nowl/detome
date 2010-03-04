@@ -37,6 +37,8 @@
                     second-value seconds, (:tick ticks) for the
                     callback to be called every ticks ticks, :one-shot
                     to be called only once, :none to never be
+                    called, (:turns N) to be called when the cadr is
+                    greater than 0, N will be decremented if update is
                     called.")))
 
 (define-condition object-nonexistent-error (error) 
@@ -62,7 +64,7 @@
     (multiple-value-bind (obj-in-hash hit) (gethash name *object-name-lookup*)
       (declare (ignore obj-in-hash))
       (if hit
-          (error "Initializing an object of the same name \"~a\"" name)
+          (warn "Initializing an object of the same name \"~a\"" name)
           (setf (gethash name *object-name-lookup*) obj))))
   
   ;; add to the global list

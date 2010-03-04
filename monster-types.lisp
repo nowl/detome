@@ -12,9 +12,9 @@
     (let ((ticks-till-next-move (cdr (assoc :ttn-move (meta obj))))
           (ticks-till-move (cdr (assoc :tt-move (meta obj)))))
       (cond ((null ticks-till-next-move)
-             (push (cons :tt-move black::*updates-per-second*) (meta obj))
+             (push (cons :tt-move 2) (meta obj))
              (push (cons :ttn-move 1) (meta obj)))
-            ((> ticks-till-next-move ticks-till-move)
+            ((>= ticks-till-next-move ticks-till-move)
              (let ((x (- (random 3) 1))
                    (y (- (random 3) 1)))
                (attempt-move-monster obj x y))
@@ -26,7 +26,7 @@
 	"player-front"
 	1
   #'(lambda ()
-      (list 3 (+ 3 (random 5))))
+      (+ 3 (random 5)))
   #'(lambda ()
       (list 1 (1+ (random 5))))
   #'(lambda ()
@@ -40,15 +40,16 @@
 	"player-front"
 	2
   #'(lambda ()
-      (list 4 (+ 4 (random 8))))
+      (+ 4 (random 8)))
   #'(lambda ()
       (list 1 (1+ (random 8))))
   #'(lambda ()
       (list 1 (1+ (random 8))))
   #'(lambda ()
       (list 1 (1+ (random 8))))
-  #'(lambda (obj)
-      nil))
+  ;;#'(lambda (obj)
+  ;;    nil))
+  #'random-walk-movement)
 
   
   
