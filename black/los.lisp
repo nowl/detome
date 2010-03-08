@@ -81,7 +81,9 @@
 (defvar *squares-to-test* (build-distance-offsets))
 
 (defun trace-light-intensity (x y src-x src-y attenuation-key)
-  (let ((path (butlast (mod-bresenham src-x src-y x y)))
+  (let ((path (butlast (#+mod-bresenham
+                        mod-bresenham
+                        bresenham src-x src-y x y)))
         (intensity 1.0))
     (mapcar #'(lambda (point)
                 (destructuring-bind (x y) point

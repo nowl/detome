@@ -97,7 +97,8 @@
   (define-image "plain" "data/tileset.png" '(1 1 32 32))
   (define-image "wall" "data/tileset.png" '(34 1 32 32))
   (define-image "mountain" "data/tileset.png" '(67 1 32 32))
-  (define-image "player-front" "data/tileset.png" '(1 34 32 32)))
+  (define-image "player-front" "data/tileset.png" '(1 34 32 32))
+  (define-image "giant-rat" "data/tileset.png" '(1 67 32 32)))
 
 (define-map-cell 0
     "plain"

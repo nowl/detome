@@ -23,7 +23,7 @@
 
 (define-monster-type
 	"rat"
-	"player-front"
+	"giant-rat"
 	1
   #'(lambda ()
       (+ 3 (random 5)))
@@ -37,7 +37,7 @@
 
 (define-monster-type
 	"giant rat"
-	"player-front"
+	"giant-rat"
 	2
   #'(lambda ()
       (+ 4 (random 8)))
