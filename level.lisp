@@ -581,11 +581,11 @@
                      (remove-monster mon)
                      (textarea-log `((:color "00ff00") ,(name (mon-type mon)) (:color "ffffff") " dies!"))))))
 
-(defun detome ()
+(defun detome (&optional (fullscreen nil))
   ;; reinit
   (setf (update-cb-control (get-object-by-name "render updater")) :one-shot)
 
   (textarea-log '("Welcome to " (:color "ff0000") "Detome" (:color "ffffff") "! The goal of this game is to hunt down the dark wizard Varlok and have some good looting fun on the way.")
 		:ttl 20)
-  (mainloop)); :sdl-flags sdl:sdl-fullscreen))
+  (mainloop :sdl-flags (if fullscreen sdl:sdl-fullscreen 0)))
 

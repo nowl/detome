@@ -16,5 +16,6 @@
    (:file "monster")
    (:file "mid-disp")
    (:file "level")
-   (:file "monster-types"))
+   (:file "monster-types")
+   (:file "control"))
   :serial t)
