@@ -12,7 +12,7 @@
                 (0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 2 2 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
                 (0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 2 2 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
                 (0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 2 2 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-                (0 0 0 0 1 1 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+                (0 0 0 0 3 3 3 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
                 (0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
                 (0 0 0 0 1 1 1 0 1 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 2 2 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
                 (0 0 0 0 0 0 1 0 1 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 2 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
@@ -95,6 +95,7 @@
 
 (defun define-images ()
   (define-image "plain" "data/tileset.png" '(1 1 32 32))
+  (define-image "tree" "data/tileset.png" '(100 1 32 32))
   (define-image "wall" "data/tileset.png" '(34 1 32 32))
   (define-image "mountain" "data/tileset.png" '(67 1 32 32))
   (define-image "player-front" "data/tileset.png" '(1 34 32 32))
@@ -115,6 +116,11 @@
   :attenuation '(0.75 :dark 0.9)
   :walkable t
   :image "mountain")
+(define-map-cell 3
+    "tree"
+  :attenuation '(0.1 :dark 0.6)
+  :walkable t
+  :image "tree")
 
 (defun take-turn ()
   "Any objects that use :turns will have their number of turns incremented."
@@ -349,16 +355,17 @@
   (let ((text '((:color "ffffff") "This is a transparent hover test. Your hit points, mana, etc. will appear here. In " (:color "ff0000") "color!")))
     (make-hover-message 10 10 (- (* 32 (nth 2 *map-window*)) 10) "00ffff" #x80 text :ttl 100 :mover (list nil 4) :draw-rect nil :fit-height t)))
 
+(defmacro gen-move-command (key-symbol delta-x delta-y)
+  ``((sdl:key= key ,,key-symbol)
+     (make-and-send-message 
+      :sender "event processor" :receiver "global message receiver"
+      :action #'(lambda (sender receiver)
+                  (attempt-move-player ,,delta-x ,,delta-y)
+                  (move-map-window-if-needed)
+                  (update-intensity-map (x *player*) (y *player*) 1.0)))
+     t))
+
 (defun scroll-map-with-arrows-event (&key key &allow-other-keys)
-  (macrolet ((gen-move-command (key-symbol delta-x delta-y)
-			   ``((sdl:key= key ,,key-symbol)
-				  (make-and-send-message 
-				   :sender "event processor" :receiver "global message receiver"
-				   :action #'(lambda (sender receiver)
-							   (attempt-move-player ,,delta-x ,,delta-y)
-							   (move-map-window-if-needed)
-							   (update-intensity-map (x *player*) (y *player*) 1.0)))
-				  t)))
 	(cond #.(gen-move-command :sdl-key-kp4 -1 0)
 		  #.(gen-move-command :sdl-key-kp7 -1 -1)
 		  #.(gen-move-command :sdl-key-kp8 0 -1)
@@ -374,7 +381,7 @@
 						(mid-displace 10 10 :array *level* :roughness 100.0 
 									  :post-filter-func #'(lambda (val)
 															(map-cell-number (gethash 
-																			  (cond ((> val 0.85) "wall")
+																			  (cond ((> val 0.85) "tree")
 																					((> val 0.65) "mountain")
 																					(t "plain"))
 																			  *map-cells-by-name*))))
@@ -392,7 +399,7 @@
 			:action #'(lambda (sender receiver)
 						(add-damage-hover *player* -5)))
 		   t)
-		  (t nil))))
+		  (t nil)))
 
 
 (add-key-down-event #'scroll-map-with-arrows-event)
