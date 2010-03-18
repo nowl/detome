@@ -255,11 +255,25 @@
 	   (setf (nth 1 *map-window*) (- level-height window-height)))
 	  (t (setf (nth 1 *map-window*) (- (y *player*) (/ window-height 2)))))))
 
+(defun actor-not-at (x y)
+  ;; test other monsters
+  (dolist (actor *monsters-in-level*)
+	(when (and (= (x actor) x)
+			   (= (y actor) y))
+	  (return-from actor-not-at nil)))
+  ;; test player
+  (when (and (= (x *player*) x)
+			 (= (y *player*) y))
+	(return-from actor-not-at nil))
+  t)
+
 (defun walkable (x y)
   (let ((level-width (array-dimension *level* 1))
 	(level-height (array-dimension *level* 0)))
     (unless (and (>= x 0) (>= y 0) (< x level-width) (< y level-height))
-      (return-from walkable nil)))      
+      (return-from walkable (values nil :world-extents))))
+  (unless (actor-not-at x y)
+	(return-from walkable (values nil :actor)))
   (let* ((map-point (aref *level* y x)))
     (map-cell-walkable (gethash map-point *map-cells-by-number*))))
 
@@ -305,91 +319,80 @@
     (let* ((new-x (+ x delta-x))
            (new-y (+ y delta-y))
            (monsters (monsters-at new-x new-y)))
-      (cond ((not (walkable new-x new-y))
-             (textarea-log `("Blocked going " (:color "0000ff") 
-                                              ,(ecase delta-x
-                                                      (1 (ecase delta-y
-                                                           (0 "east")
-                                                           (1 "southeast")
-                                                           (-1 "northeast")))
-                                                      (0 (ecase delta-y
-                                                           (1 "south")
-                                                           (-1 "north")))
-                                                      (-1 (ecase delta-y
-                                                            (1 "southwest")
-                                                            (0 "west")
-                                                            (-1 "northwest"))))
-                                              (:color ,sdl:*white*) "!")))
-            (monsters (attack *player* (typecase monsters
-                                         (cons (first monsters))
-                                         (t monsters)))
-                      (take-turn))
-            (t (setf x new-x y new-y)
-               (take-turn))))))
+	  (multiple-value-bind (walkable walkable-reason) (walkable new-x new-y)
+		(cond ((and (not walkable)
+					(not (eq walkable-reason :actor)))
+			   ;; we're blocked and not due to a monster or another
+			   ;; actor
+			   (textarea-log `("Blocked going " (:color "0000ff") 
+												,(ecase delta-x
+														(1 (ecase delta-y
+															 (0 "east")
+															 (1 "southeast")
+															 (-1 "northeast")))
+														(0 (ecase delta-y
+															 (1 "south")
+															 (-1 "north")))
+														(-1 (ecase delta-y
+															  (1 "southwest")
+															  (0 "west")
+															  (-1 "northwest"))))
+												(:color ,sdl:*white*) "!")))
+			  (monsters (attack *player* (typecase monsters
+										   (cons (first monsters))
+										   (t monsters)))
+						(take-turn))
+			  (t (setf x new-x y new-y)
+				 (take-turn)))))))
 
 (defun add-health-hover ()
   (let ((text '((:color "ffffff") "This is a transparent hover test. Your hit points, mana, etc. will appear here. In " (:color "ff0000") "color!")))
     (make-hover-message 10 10 (- (* 32 (nth 2 *map-window*)) 10) "00ffff" #x80 text :ttl 100 :mover (list nil 4) :draw-rect nil :fit-height t)))
 
 (defun scroll-map-with-arrows-event (&key key &allow-other-keys)
-  (cond ((sdl:key= key :sdl-key-a)
-         (make-and-send-message 
-          :sender "event processor" :receiver "global message receiver"
-          :action #'(lambda (sender receiver)
-		      (attempt-move-player -1 0)
-		      (move-map-window-if-needed)
-                      (update-intensity-map (x *player*) (y *player*) 1.0)))
-         t)
-        ((sdl:key= key :sdl-key-d)
-         (make-and-send-message 
-          :sender "event processor" :receiver "global message receiver"
-          :action #'(lambda (sender receiver)
-		      (attempt-move-player 1 0)
-		      (move-map-window-if-needed)
-                      (update-intensity-map (x *player*) (y *player*) 1.0)))
-         t)
-        ((sdl:key= key :sdl-key-s)
-         (make-and-send-message 
-          :sender "event processor" :receiver "global message receiver"
-          :action #'(lambda (sender receiver)
-		      (attempt-move-player 0 1)
-		      (move-map-window-if-needed)
-                      (update-intensity-map (x *player*) (y *player*) 1.0)))
-         t)
-        ((sdl:key= key :sdl-key-w)
-         (make-and-send-message 
-          :sender "event processor" :receiver "global message receiver"
-          :action #'(lambda (sender receiver)
-		      (attempt-move-player 0 -1)
-		      (move-map-window-if-needed)
-                      (update-intensity-map (x *player*) (y *player*) 1.0)))
-         t)
-        ((sdl:key= key :sdl-key-r)
-         (make-and-send-message
-          :sender "event processor" :receiver "global message receiver"
-          :action #'(lambda (sender receiver)
-                      (mid-displace 10 10 :array *level* :roughness 100.0 
-                                    :post-filter-func #'(lambda (val)
-                                                          (map-cell-number (gethash 
-                                                                            (cond ((> val 0.85) "wall")
-                                                                                  ((> val 0.65) "mountain")
-                                                                                  (t "plain"))
-                                                                            *map-cells-by-name*))))
-                      (update-intensity-map (x *player*) (y *player*) 1.0)))
-         t)
-        ((sdl:key= key :sdl-key-h)
-         (make-and-send-message 
-          :sender "event processor" :receiver "global message receiver"
-          :action #'(lambda (sender receiver)
-                      (add-health-hover)))
-         t)
-        ((sdl:key= key :sdl-key-j)
-         (make-and-send-message
-          :sender "event processor" :receiver "global message receiver"
-          :action #'(lambda (sender receiver)
-                      (add-damage-hover *player* -5)))
-         t)
-        (t nil)))
+  (macrolet ((gen-move-command (key-symbol delta-x delta-y)
+			   ``((sdl:key= key ,,key-symbol)
+				  (make-and-send-message 
+				   :sender "event processor" :receiver "global message receiver"
+				   :action #'(lambda (sender receiver)
+							   (attempt-move-player ,,delta-x ,,delta-y)
+							   (move-map-window-if-needed)
+							   (update-intensity-map (x *player*) (y *player*) 1.0)))
+				  t)))
+	(cond #.(gen-move-command :sdl-key-kp4 -1 0)
+		  #.(gen-move-command :sdl-key-kp7 -1 -1)
+		  #.(gen-move-command :sdl-key-kp8 0 -1)
+		  #.(gen-move-command :sdl-key-kp9 1 -1)
+		  #.(gen-move-command :sdl-key-kp6 1 0)
+		  #.(gen-move-command :sdl-key-kp3 1 1)
+		  #.(gen-move-command :sdl-key-kp2 0 1)
+		  #.(gen-move-command :sdl-key-kp1 -1 1)
+		  ((sdl:key= key :sdl-key-r)
+		   (make-and-send-message
+			:sender "event processor" :receiver "global message receiver"
+			:action #'(lambda (sender receiver)
+						(mid-displace 10 10 :array *level* :roughness 100.0 
+									  :post-filter-func #'(lambda (val)
+															(map-cell-number (gethash 
+																			  (cond ((> val 0.85) "wall")
+																					((> val 0.65) "mountain")
+																					(t "plain"))
+																			  *map-cells-by-name*))))
+						(update-intensity-map (x *player*) (y *player*) 1.0)))
+		   t)
+		  ((sdl:key= key :sdl-key-h)
+		   (make-and-send-message 
+			:sender "event processor" :receiver "global message receiver"
+			:action #'(lambda (sender receiver)
+						(add-health-hover)))
+		   t)
+		  ((sdl:key= key :sdl-key-j)
+		   (make-and-send-message
+			:sender "event processor" :receiver "global message receiver"
+			:action #'(lambda (sender receiver)
+						(add-damage-hover *player* -5)))
+		   t)
+		  (t nil))))
 
 
 (add-key-down-event #'scroll-map-with-arrows-event)

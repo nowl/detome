@@ -2,10 +2,10 @@
 
 (defun attempt-move-monster (monster delta-x delta-y)
   (with-slots (x y) monster
-    (let ((new-x (+ x delta-x))
-	  (new-y (+ y delta-y)))
-      (when (walkable new-x new-y)
-        (setf x new-x y new-y)))))
+	(let ((new-x (+ x delta-x))
+		  (new-y (+ y delta-y)))
+	  (when (walkable new-x new-y)
+		(setf x new-x y new-y)))))
 
 (defgeneric random-walk-movement (obj)
   (:method ((obj actor))
