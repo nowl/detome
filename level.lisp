@@ -83,7 +83,7 @@
   image)
 
 (defmacro define-map-cell (number name &key attenuation walkable image)
-  (let ((cell (gensym)))
+  (let ((cell (gensym)))    
     `(let ((,cell (make-map-cell :number ,number
                                  :attenuation ,attenuation
                                  :walkable ,walkable
@@ -117,10 +117,15 @@
   :walkable t
   :image "mountain")
 (define-map-cell 3
-    "tree"
+    "tree-on-plain"
   :attenuation '(0.1 :dark 0.6)
   :walkable t
-  :image "tree")
+  :image '("plain" "tree"))
+(define-map-cell 4
+    "tree-on-mountain"
+  :attenuation '(0.75 :dark 0.9)
+  :walkable t
+  :image '("mountain" "tree"))
 
 (defun take-turn ()
   "Any objects that use :turns will have their number of turns incremented."
@@ -381,8 +386,9 @@
 						(mid-displace 10 10 :array *level* :roughness 100.0 
 									  :post-filter-func #'(lambda (val)
 															(map-cell-number (gethash 
-																			  (cond ((> val 0.85) "tree")
+																			  (cond ((> val 0.85) "tree-on-mountain")
 																					((> val 0.65) "mountain")
+																					((> val 0.45) "tree-on-plain")
 																					(t "plain"))
 																			  *map-cells-by-name*))))
 						(update-intensity-map (x *player*) (y *player*) 1.0)))
@@ -422,12 +428,15 @@
         ;; otherwise return the explored map intensity
         (aref *explored-map* y x))))
 
-(defun image-from-map (x y)
+(defun image-from-maps (x y)
   (let ((darken-amount (clip (- 1 (total-intensity-at-point x y))
                              0.0 1.0)))
-    (let ((map-point (aref *level* y x)))
-      (get-image (map-cell-image (gethash map-point *map-cells-by-number*))
-                 :darken darken-amount))))
+    (let* ((map-point (aref *level* y x))
+           (images (map-cell-image (gethash map-point *map-cells-by-number*))))
+      (etypecase images
+        (cons (loop for image in images collecting
+                   (get-image image :darken darken-amount)))
+        (string (list (get-image images :darken darken-amount)))))))
 
 (defgeneric get-screen-pos-of (obj)
   (:documentation 
@@ -459,10 +468,11 @@
          (loop for y from (max (second *map-window*) 0) below (min map-height
                                                                    (+ (fourth *map-window*)
                                                                       (second *map-window*))) do
-              (sdl:draw-surface-at-* (image-from-map x y)
-                                     
-                                     (* (- x (first *map-window*)) 32)
-                                     (* (- y (second *map-window*)) 32))))))
+              (let ((images (image-from-maps x y)))
+                (loop for image in images do
+                     (sdl:draw-surface-at-* image
+                                            (* (- x (first *map-window*)) 32)
+                                            (* (- y (second *map-window*)) 32))))))))
 
 (defvar *message-area-strings* nil)
 
