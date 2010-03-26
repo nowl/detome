@@ -50,7 +50,7 @@
 
 (define-monster-type
 	"rat"
-	"giant-rat"
+	"rat"
 	1
   #'(lambda ()
       (+ 3 (random 5)))
