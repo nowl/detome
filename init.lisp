@@ -1,5 +1,6 @@
-(dolist (dir (directory "C:\\Documents and Settings\\mjp\\.sbcl\\systems\\*"))
-  (push dir asdf:*central-registry*))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (dolist (dir (directory "C:\\Documents and Settings\\mjp\\.sbcl\\systems\\*"))
+	(push dir asdf:*central-registry*)))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (require 'cffi))

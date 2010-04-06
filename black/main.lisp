@@ -1,6 +1,7 @@
 (in-package #:black)
 
-(export 'mainloop)
+(export '(mainloop
+		  reset-game))
 
 (defvar *game-tick* 0)
 (defvar *render-tick* 0)
@@ -87,3 +88,9 @@
 			*next-update-in-ms* (+ (get-tick-count) *ms-per-update*))
 	  (setf (frame-rate) 0)    
 	  (gen-sdl-with-events))))
+
+(defun reset-game ()
+  (reset-globals)
+  (clear-render-list)
+  (clear-image-caches))
+  

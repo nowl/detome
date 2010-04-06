@@ -4,8 +4,8 @@
           name
           get-object-by-name
           remove-object
-	  update-cb
-	  update-cb-control))
+          update-cb
+          update-cb-control))
 
 (defclass object ()
   ((name

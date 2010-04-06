@@ -1,4 +1,4 @@
-(in-package #:detome)
+(in-package #:black)
 
 (export 'mid-displace)
 

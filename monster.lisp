@@ -70,3 +70,53 @@
        (setf *monster-types-by-level* (remove ,name *monster-types-by-level* :key #'(lambda (x) (name (cadr x))) :test #'string=))
        (push (list ,level ,mt) *monster-types-by-level*)
        (setf *monster-types-by-level* (sort *monster-types-by-level* #'< :key #'car)))))
+
+
+(defvar *monsters-in-level* nil)
+
+(defun clear-monsters-from-level ()
+  (loop for mon in *monsters-in-level* do
+       (remove-object (name mon)))
+  (setf *monsters-in-level* nil))
+
+(defun monsters-at (x y)
+  (loop for mon in *monsters-in-level* when (and (= (x mon) x) (= (y mon) y)) collect mon))
+
+(defun draw-monsters (interpolation)  
+  (dolist (mon *monsters-in-level*)
+    (multiple-value-bind (x y) (get-screen-pos-of mon)
+      (let ((darken-amount (clip (- 1 (los-intensity-at-point (x mon) (y mon)))
+                                 0.0 1.0)))
+        (when (< darken-amount 1.0)
+          (sdl:draw-surface-at-* (get-image (image-name mon) :darken darken-amount) x y))))))
+
+(defun populate-monsters ()
+  (loop for x below (+ 10 (random (array-dimension *level* 0)) ) do
+       (push (get-random-monster (random (array-dimension *level* 1))
+                                 (random (array-dimension *level* 0))
+                                 1 10)
+             *monsters-in-level*)))
+
+(defun remove-monster (monster)
+  (setf *monsters-in-level* (delete monster *monsters-in-level*))
+  (remove-object (name monster)))
+
+(define-object
+    :name "monster garbage collector"
+  :update-cb #'(lambda (obj)
+                 (dolist (mon *monsters-in-level*)
+                   (when (<= (hp mon) 0)
+                     (remove-monster mon)
+                     (textarea-log `((:color "00ff00") ,(name (mon-type mon)) (:color "ffffff") " dies!"))))))
+
+(defun actor-not-at (x y)
+  ;; test other monsters
+  (dolist (actor *monsters-in-level*)
+	(when (and (= (x actor) x)
+			   (= (y actor) y))
+	  (return-from actor-not-at nil)))
+  ;; test player
+  (when (and (= (x *player*) x)
+			 (= (y *player*) y))
+	(return-from actor-not-at nil))
+  t)

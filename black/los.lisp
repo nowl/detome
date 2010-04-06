@@ -4,17 +4,6 @@
 
 ;;;; modified ray casting method for line of sight
 
-;;; quadrants are defined as:
-;;;    3  |  0
-;;;  -----+-----
-;;;    2  |  1
-;;; y increases going up vertically
-;;; x increases going right horizontally
-;;; quadrant 0 includes the positive x axis
-;;; quadrant 1 includes the negative y axis
-;;; quadrant 2 includes the negative x axis
-;;; quadrant 3 includes the positive y axis
-
 (defun bresenham (s-x s-y d-x d-y)
   (let (acc)
     (let ((x0 s-x) (x1 d-x)

@@ -1,7 +1,7 @@
 (in-package #:black)
 
 (export '(add-to-render-list
-          clear-render-list
+	  clear-render-list
           remove-from-render-list))
 
 (defun render-obj (obj interpolation)
