@@ -23,5 +23,6 @@
    (:file "player")
    (:file "level")
    (:file "monster-types")
-   (:file "control"))
+   (:file "control")
+   (:file "dungeon"))
   :serial t)
