@@ -27,7 +27,7 @@
 	     (:module "misc"
 		      :components
 		      ((:file "mid-disp")
-			   (:file "random"))
+		       (:file "random"))
 		      :serial t))
 	    :serial t)))
   
