@@ -77,6 +77,18 @@
                   (update-intensity-map (x *player*) (y *player*) 1.0)))
      t))
 
+#|
+(mid-displace 10 10 :array *level* :roughness 100.0 
+									  :post-filter-func #'(lambda (val)
+															(map-cell-number (gethash 
+																			  (cond ((> val 0.85) "tree-on-mountain")
+																					((> val 0.65) "mountain")
+																					((> val 0.45) "tree-on-plain")
+																					(t "plain"))
+																			  *map-cells-by-name*))))
+						(update-intensity-map (x *player*) (y *player*) 1.0)))
+|#
+
 (defun scroll-map-with-arrows-event (&key key &allow-other-keys)
 	(cond #.(gen-move-command :sdl-key-kp4 -1 0)
 		  #.(gen-move-command :sdl-key-kp7 -1 -1)
@@ -90,15 +102,25 @@
 		   (make-and-send-message
 			:sender "event processor" :receiver "global message receiver"
 			:action #'(lambda (sender receiver)
-						(mid-displace 10 10 :array *level* :roughness 100.0 
-									  :post-filter-func #'(lambda (val)
-															(map-cell-number (gethash 
-																			  (cond ((> val 0.85) "tree-on-mountain")
-																					((> val 0.65) "mountain")
-																					((> val 0.45) "tree-on-plain")
-																					(t "plain"))
-																			  *map-cells-by-name*))))
-						(update-intensity-map (x *player*) (y *player*) 1.0)))
+                        (let (start-pos)
+                          (setf *level* (array-map (generate-dungeon (array-dimension *level* 0)
+                                                                     (array-dimension *level* 1)
+                                                                     100)
+                                                   #'(lambda (tile i j)
+                                                       (map-cell-number
+                                                        (gethash
+                                                         (case tile
+                                                           (:wall "wall")
+                                                           (:floor (when (null start-pos)
+                                                                     (setf start-pos (list i j)))
+                                                                   "plain")
+                                                           (:hallway "plain")
+                                                           (otherwise "wall"))
+                                                         *map-cells-by-name*)))))
+                          (setf (x *player*) (second start-pos)
+                                (y *player*) (first start-pos))
+                          (update-intensity-map (x *player*) (y *player*) 1.0))))
+                                                     
 		   t)
 		  ((sdl:key= key :sdl-key-h)
 		   (make-and-send-message 
