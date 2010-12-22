@@ -1,14 +1,34 @@
 (in-package #:detome)
 
-(defvar *level*
+(defparameter *rat-basement*
+  (make-array '(15 20)
+              :initial-contents 
+              '((1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0)
+                (1 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0)
+                (1 0 0 0 0 0 1 0 0 0 0 1 1 0 0 0 0 0 0 0)
+                (1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0 0)
+                (1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0 0)
+                (1 1 1 1 1 1 1 1 1 1 1 0 1 0 0 0 0 0 0 0)
+                (0 0 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0)
+                (0 0 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0)
+                (0 0 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0)
+                (0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0)
+                (0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0)
+                (0 0 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0)
+                (0 0 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0)
+                (0 0 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0)
+                (0 0 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0))))
+  
+
+(defparameter *level*
   (make-array '(50 50)
               :initial-contents 
-              '((0 0 0 0 0 0 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-                (0 0 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-                (0 0 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-                (0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-                (0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-                (0 0 0 0 0 0 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+              '((1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+                (1 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+                (1 0 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+                (1 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+                (1 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+                (1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
                 (0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 2 2 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
                 (0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 2 2 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
                 (0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 2 2 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
@@ -54,6 +74,8 @@
                 (0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
                 (0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0))))
 
+(setf *level* *rat-basement*)
+
 (defvar *intensity-map* (funcall #'make-array (array-dimensions *level*)))
 
 (defvar *explored-map* (funcall #'make-array (array-dimensions *level*)))
@@ -83,8 +105,8 @@
   (clear-intensity-map)
   (setf (aref *intensity-map* y x) intensity)
   (let ((sights (line-of-sight x y
-                               (array-dimension *level* 0)
                                (array-dimension *level* 1)
+                               (array-dimension *level* 0)
                                #'(lambda (x y) (funcall #'detome::attenuation-lookup x y detome::*level*)) 
 			       *light-intensity-cutoff*)))
     (loop for sight in sights do
@@ -133,7 +155,7 @@
 
 
 (defun draw-background (interpolation)
-  (destructuring-bind (map-width map-height) (array-dimensions *level*)
+  (destructuring-bind (map-height map-width) (array-dimensions *level*)
     (loop for x from (max (first *map-window*) 0) below (min map-width
                                                              (+ (third *map-window*)
                                                                 (first *map-window*))) do

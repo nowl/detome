@@ -31,7 +31,11 @@
   (declare (sdl:surface surface)
            (short-float amount))
   (let ((new-surface (create-surface 32 32 :pixel-alpha t)))
-    (with-locked-surface (surf new-surface)
+    ;; XXX: in the past we had the locked surface version here, but
+    ;;   this seems to not be required in the newer svn versions of
+    ;;   lispbuilder-sdl
+    ;;(with-locked-surface (surf new-surface)
+    (let ((surf new-surface))
       (loop for y below (height surf) do
            (loop for x below (width surf) do
                 (let ((old-pixel-color (sdl:read-pixel-* x y :surface surface)))

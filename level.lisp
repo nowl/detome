@@ -42,4 +42,5 @@
 
   (textarea-log '("Welcome to " (:color "ff0000") "Detome" (:color "ffffff") "! The goal of this game is to hunt down the dark wizard Varlok and have some good looting fun on the way.")
 		:ttl 20)
+  (textarea-log '("You awaken to rats. You have no recollection of how you got here but your head is aching.") :ttl 30)
   (mainloop :sdl-flags (if fullscreen sdl:sdl-fullscreen 0)))
