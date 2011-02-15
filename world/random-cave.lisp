@@ -27,8 +27,9 @@
   (clear-explored-map)
 
   
-  ;; TODO: fix this
-  (loop for x below *level-width* do
-       (loop for y below *level-height* do
-            (if (equal (aref *level* y x) '(5))
-                (place-player x y)))))
+  (block set-player
+    (loop for x below *level-width* do
+         (loop for y below *level-height* do
+              (when (equal (aref *level* y x) '(5))
+                (place-player x y)
+                (return-from set-player nil))))))
