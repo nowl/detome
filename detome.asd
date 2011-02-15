@@ -27,7 +27,8 @@
    (:module "world"
             :components
             ((:file "rat-basement")
-             (:file "open-plains"))
+             (:file "open-plains")
+             (:file "random-cave"))
             :serial t)
    (:file "main"))
   :serial t)

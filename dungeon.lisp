@@ -21,6 +21,12 @@
             (t (error t "must pass in a valid location, received :i ~a, :j ~a, :loc ~a"
                       i j loc)))
     (log :debug "building a ~a at ~a,~a" type y x)
+
+    ;; check for existing wall and if so then remove from *walls*
+    (when (eq (aref dungeon y x) :wall)
+      (setf *walls* 
+            (cl:delete (list y x) *walls* :test #'equalp)))
+
     (setf (aref dungeon y x) type)
     (when (and (eq type :wall)
                (not-edge-tile dungeon y x))
@@ -111,7 +117,7 @@
         (directions-to-check '(:north :south :east :west)))
     (loop while (not (null directions-to-check)) do
          (let ((direction (random-choice directions-to-check)))
-           (setf directions-to-check (remove direction directions-to-check))
+           (setf directions-to-check (cl:remove direction directions-to-check))
            (ecase direction
              (:north (when (null (aref dungeon (1- i) j))
                        (return-from find-random-direction-and-length
@@ -132,23 +138,23 @@
   (destructuring-bind (s-i s-j) start
     (multiple-value-bind (dir length-abs) (find-random-direction-and-length dungeon start)
       (log :debug "trying to build hallway from ~a" start)
-      (if (null dir)
+      (if (or (null dir) (= 0 length-abs))
           (progn
             (log :debug "failed to build hallway")
             (add-tile dungeon :wall :loc start))
           (progn
-            (let ((length (random length-abs)))
+            (let ((length (1+ (random length-abs))))
               (log :debug "building hallway ~a for ~a tiles" dir length)
               ;; build the actual hallway      
               (ecase dir
                 (:north (loop for i below length do
-                             (build-with-surrounding-when-null dungeon (- s-i i) s-j :hallway :wall)))
+                             (build-with-surrounding-when-null dungeon (- s-i i) s-j :floor :wall)))
                 (:south (loop for i below length do
-                             (build-with-surrounding-when-null dungeon (+ s-i i) s-j :hallway :wall)))
+                             (build-with-surrounding-when-null dungeon (+ s-i i) s-j :floor :wall)))
                 (:east (loop for j below length do
-                            (build-with-surrounding-when-null dungeon s-i (+ s-j j) :hallway :wall)))
+                            (build-with-surrounding-when-null dungeon s-i (+ s-j j) :floor :wall)))
                 (:west (loop for j below length do
-                            (build-with-surrounding-when-null dungeon s-i (- s-j j) :hallway :wall))))))))))
+                            (build-with-surrounding-when-null dungeon s-i (- s-j j) :floor :wall))))))))))
 
 
 (defun generate-random-asset (dungeon)
@@ -187,6 +193,6 @@
                  (case tile
                    (:wall 1)
                    (:floor 2)
-                   (:hallway 3)
+                   ;;(:hallway 3)
                    (t 0)))))
                      
