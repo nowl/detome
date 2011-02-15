@@ -58,8 +58,8 @@
                                     "textarea"
                                     "notifications"))
                 ;;(build-rat-basement))
-                (build-random-cave 50 50 50 1))
-                ;;(build-open-plains))
+                ;;(build-random-cave 50 50 50 1))
+                (build-open-plains))
  
  :update-cb-control :one-shot)
 

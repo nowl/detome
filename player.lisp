@@ -50,7 +50,8 @@
                   (decf (hp actor2) dmg))
                  (t ;;(textarea-log `((:color "00ff00") ,(name (mon-type actor1))
                     ;;                (:color "ffffff") " misses you"))
-                    (add-damage-hover actor2 "missed" "7f0000")))))))
+                  ;;(add-damage-hover actor2 "missed" "7f0000"))))))
+                  nil))))))
          
   
 (defun attack (actor1 actor2)
