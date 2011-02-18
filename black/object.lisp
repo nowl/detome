@@ -41,6 +41,10 @@
                     greater than 0, N will be decremented if update is
                     called.")))
 
+(defmethod print-object ((obj object) stream)
+  "Print the game object by displaying it's name"
+  (write-string (name obj) stream))
+
 (define-condition object-nonexistent-error (error) 
   ((text :initarg :text :reader text)))
 
@@ -49,29 +53,39 @@
 
 (defun get-object-by-name (obj-name)
   (declare (simple-string obj-name))
-  (let ((obj (gethash obj-name *object-name-lookup*)))
-    (or obj 
+  (let ((obj (gethash obj-name (object-name-lookup (object-manager *game-state*)))))
+    (or obj
         (error 'object-nonexistent-error
                :text (format nil "object does not exist: \"~a\"" obj-name)))))
 
 (defmethod initialize-instance :after ((obj object) &key)
-  "Add newly created object instances to the global object lists."
+  "Add newly created object instances to the current game-state."
+  (add obj *game-state*))
 
-  (remove-object (name obj))
-  
+(defmethod add ((obj object) (state game-state))
+  ;; add to the object list
+  (add obj (object-manager state)))
+
+(defmethod add ((obj object) (manager object-manager))
   ;; add to the name hashtable
-  (with-slots (name) obj
-    (multiple-value-bind (obj-in-hash hit) (gethash name *object-name-lookup*)
-      (declare (ignore obj-in-hash))
-      (if hit
-          (warn "Initializing an object of the same name \"~a\"" name)
-          (setf (gethash name *object-name-lookup*) obj))))
-  
-  ;; add to the global list
-  (pushnew obj *object-list*))
+  (with-slots (object-name-lookup objects) manager
+    (with-slots (name) obj
+      (multiple-value-bind (obj-in-hash hit) (gethash name object-name-lookup)
+        (declare (ignore obj-in-hash))
+        (if hit
+            (warn "Initializing an object of the same name \"~a\"" name)
+            (setf (gethash name object-name-lookup) obj))))
 
-(defun remove-object (object)
-  "Remove object by name from the object lists."
-  (declare (simple-string object))
-  (setf *object-list* (delete object *object-list* :test #'equal :key #'name))
-  (remhash object *object-name-lookup*))
+    ;; TODO: perhaps test for duplicate or an existing object of the
+    ;; same name before adding?
+    (pushnew obj objects)))
+
+(defmethod remove ((obj object) (state game-state))
+  (remove obj (object-manager state)))
+
+(defmethod remove ((obj object) (manager object-manager))
+  "Remove object from the object lists and name hash."
+  (with-slots (objects object-name-lookup) manager
+    (setf objects
+          (delete obj objects :test #'equal :key #'name))
+    (remhash obj object-name-lookup)))

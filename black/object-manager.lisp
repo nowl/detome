@@ -2,6 +2,8 @@
 
 (defclass object-manager ()
   ((objects :initform nil :accessor objects :type list)
-   (broadcast-receivers :initform nil :accessor broadcast-receivers :type hash-table)))
+   (object-name-lookup :initform (make-hash-table :test #'equal)
+                       :reader object-name-lookup :type hash-table)
+   (broadcast-receivers :initform (make-hash-table :test #'equal)
+                        :reader broadcast-receivers :type hash-table)))   
 
-(defparameter *object-manager* (make-instance 'object-manager))
