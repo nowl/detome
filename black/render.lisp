@@ -1,8 +1,12 @@
 (in-package #:black)
 
 (export '(add-to-render-list
-	  clear-render-list
+          clear-render-list
           remove-from-render-list))
+
+(defgeneric render (obj interpolation)
+  (:documentation
+   "This function is called to render objects to the screen."))
 
 (defun render-obj (obj interpolation)
   (declare (object obj)

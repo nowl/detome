@@ -46,3 +46,13 @@
   :attenuation '(0.75 :dark 0.9)
   :walkable t
   :image '("mountain" "tree"))
+(define-map-cell 5
+    "dirty-cement-floor"
+  :attenuation '(0.1 :dark 0.6)
+  :walkable t
+  :image '("dirty-cement-floor"))
+(define-map-cell 6
+    "rock-wall"
+  :attenuation 1.0
+  :walkable nil
+  :image '("rock-wall"))

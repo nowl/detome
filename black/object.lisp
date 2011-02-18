@@ -15,9 +15,9 @@
    (inbox
     :initform nil :accessor inbox :type list
     :documentation "A list of incoming messages to this object.")
-   (outbox
-    :initform nil :accessor outbox :type list
-	:documentation "A list of outgoing messages from this object.")
+   (render-level
+    :initform 0 :initarg :render-level :accessor render-level :type fixnum
+	:documentation "The layer to render this object on.")
    (render-cb
 	:initform nil :initarg :render-cb :accessor render-cb :type function
 	:documentation "A render callback called to render the object. The

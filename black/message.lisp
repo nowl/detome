@@ -1,72 +1,84 @@
 (in-package #:black)
 
 (export '(make-and-send-message))
+(shadow '(type))
 
-(defstruct message
-  (sender nil :type (or simple-string object))
-  (receiver nil :type (or simple-string object))
-  ;; action is a function which takes the sender object and the
-  ;; recipient object of the message as an argument
-  (action #'(lambda (n) (declare (ignore n)) nil) :type function))
+(defclass message ()
+  ((sender
+    :initarg :sender :accessor sender :type (or simple-string object)
+    :documentation "The sender of this message.")
+   (receiver
+    :initarg :receiver :initform nil :accessor receiver :type (or simple-string object)
+    :documentation "The receiver of this message. If NIL then a
+                    broadcast message is implied")
+   (type
+    :initarg :type :initform nil :accessor type :type (or simple-string symbol)
+    :documentation "The type of the message represents metadata about
+                    what the origin of the message is. For example an
+                    sdl-event message for use as a broadcast
+                    message.")
+   (action
+    :initarg :action :accessor action :type function
+    :documentation "Action is a function which takes the sender object
+                    and the recipient object of the message as an
+                    argument")))
 
-(defun deliver-message (message)
+(defun process-message (message)
   (declare (message message))
-  (multiple-value-bind (obj hit) (gethash (message-receiver message) *object-name-lookup*)
-    (if hit
-        (push message (inbox obj))
-        (error 'object-nonexistent-error :text (format nil "object does not exist: \"~a\"" (message-receiver message))))))
+  (funcall (action message) (sender message) (receiver message) (type message)))
 
-(defun skip-object-restart (c)
-  (invoke-restart (find-restart 'skip-message) c))
+(defun deliver-broadcast-message (message type)
+  (declare (message message))
+  (if (null (type message))
+      (error 'object-nonexistent-error :text (format nil "broadcast message has no type")))
+  (multiple-value-bind (objs hit) 
+      (gethash (type message) (broadcast-receivers (object-manager *game-state*)))
+    (when hit
+      (ecase type
+        (:sync
+         (loop for obj in objs do
+              (push message (inbox obj))))
+        (:async
+         (loop for obj in objs do
+              (setf (receiver message) obj)
+              (when (process-message message)
+                (return))))))))
 
-(defun route-messages ()
-  "Delivers all outgoing messages to the recipients."
-  (handler-bind ((object-nonexistent-error #'skip-object-restart))
-    (loop for obj in *object-list* do
-         (loop for message in (outbox obj) do
-              (restart-case (deliver-message message)
-                (skip-message (c) (format t "message can not be delivered:~%>> ~a~%" c))))
-         (setf (outbox obj) nil))))
-
-(defun process-message (message receiver)
-  (declare (message message)
-           (object receiver))
-  (let ((sender (etypecase (message-sender message)
-                  (simple-string (multiple-value-bind (obj hit) (gethash (message-sender message) *object-name-lookup*)
-                                   (if hit
-                                       obj
-                                       (error 'object-nonexistent-error
-                                              :text (format nil "object does not exist: \"~a\"" (message-sender message))))))
-                  (object (message-sender message)))))
-    (funcall (message-action message) sender receiver)))
+(defun deliver-directed-message (message type)
+  (declare (message message))
+  (ecase type
+    (:sync (multiple-value-bind (obj hit) (gethash (receiver message) *object-name-lookup*)
+             (if hit
+                 (push message (inbox obj))
+               (error 'object-nonexistent-error 
+                      :text (format nil "object does not exist: \"~a\"" (receiver message))))))
+    (:async (process-message message))))
 
 (defun process-messages-for-obj (obj)
   "Processes all messages in a given object's inbox in the order they
   were sent."
+  (declare (object obj))
   (let ((messages (reverse (inbox obj))))                         
 	(loop for message in messages do
-		 (restart-case (process-message message obj)
-		   (skip-message (c) (format t "message can not be processed:~%>> ~a~%" c))))
+          (process-message message))
 	(setf (inbox obj) nil)))
 
 (defun process-messages ()
   "Processes all messages in each object's inbox in the order they
   were sent."
-  (handler-bind ((object-nonexistent-error #'skip-object-restart))
-    (loop for obj in *object-list* do
-		 (process-messages-for-obj obj))))
+  (loop for obj in (objects (object-manager *game-state*)) do
+        (process-messages-for-obj obj)))
 
-(defun send-message (message)
-  "This should be called to put a message in the sender's outbox for
-  delivery on the next update."
-  (declare (message message))
-  (let ((sender (message-sender message)))
-    (etypecase sender
-      (simple-string (multiple-value-bind (obj hit) (gethash sender *object-name-lookup*)
-                       (if hit
-                           (push message (outbox obj))
-                           (error "Can not put message in outbox for object name \"~a\" (doesn't exist)" sender))))
-      (object (push message (outbox sender))))))
+(defun deliver-message (message &optional (type :sync))
+  (declare (message message)
+           (symbol type))
+  (if (null (receiver message))
+      (deliver-broadcast-message message type)
+    (deliver-directed-message message type)))
 
-(defmacro make-and-send-message (&key sender receiver action)
-  `(send-message (make-message :sender ,sender :receiver ,receiver :action ,action)))
+(defmacro make-and-send-message (&key sender receiver (mes-type nil) action (type :sync))
+  `(deliver-message (make-instance 'message 
+                                   :sender ,sender 
+                                   :receiver ,receiver 
+                                   :action ,action 
+                                   :type ,mes-type) ,type))

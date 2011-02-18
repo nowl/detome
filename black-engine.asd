@@ -13,8 +13,11 @@
 	    :components
 	    ((:file "package")
 	     (:file "log")
-	     (:file "globals")
+	     (:file "generics")
+	     (:file "config")
 	     (:file "object")
+	     (:file "game-state")
+	     (:file "object-manager")
 	     (:file "message")
 	     (:file "render")
 	     (:file "update")

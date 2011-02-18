@@ -7,4 +7,6 @@
   (define-image "mountain" "data/tileset.png" '(67 1 32 32))
   (define-image "player-front" "data/tileset.png" '(1 34 32 32))
   (define-image "rat" "data/tileset.png" '(1 67 32 32))
-  (define-image "giant-rat" "data/tileset.png" '(34 67 32 32)))
+  (define-image "giant-rat" "data/tileset.png" '(34 67 32 32))
+  (define-image "dirty-cement-floor" "data/tileset.png" '(133 1 32 32))
+  (define-image "rock-wall" "data/tileset.png" '(166 1 32 32)))
