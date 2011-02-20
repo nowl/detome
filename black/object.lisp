@@ -48,6 +48,7 @@
 
 (defmethod print-object ((obj object) stream)
   "Print the game object by displaying it's name"
+  (write-string "object: " stream)
   (write-string (name obj) stream))
 
 (define-condition object-nonexistent-error (error) 

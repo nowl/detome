@@ -56,3 +56,15 @@
     (or obj
         (error 'object-nonexistent-error
                :text (format nil "object does not exist: \"~a\"" obj-name)))))
+
+(defun add-to-broadcast-receivers (obj recv-type)
+  (with-slots (broadcast-receivers) (object-manager *game-state*)
+    (multiple-value-bind (objects hit) (gethash recv-type broadcast-receivers)
+      (if hit
+          (pushnew obj objects :test #'equal :key #'name)
+          (setf (gethash (name obj) broadcast-receivers)
+                (list (name obj)))))))
+
+(defun lookup-by-name (name)
+  (with-slots (object-name-lookup) (object-manager *game-state*)
+    (gethash name object-name-lookup)))

@@ -31,6 +31,7 @@
 
 (defun deliver-broadcast-message (message type)
   (declare (message message))
+  (log :info "~a" message)
   (if (null (type message))
       (error 'object-nonexistent-error :text (format nil "broadcast message has no type")))
   (unless *game-state*
@@ -51,7 +52,9 @@
 (defun deliver-directed-message (message type)
   (declare (message message))
   (ecase type
-    (:sync (multiple-value-bind (obj hit) (gethash (receiver message) *object-name-lookup*)
+    (:sync (multiple-value-bind (obj hit) (etypecase (receiver message)
+                                            (string (lookup-by-name (receiver message)))
+                                            (object (receiver message)))
              (if hit
                  (push message (inbox obj))
                (error 'object-nonexistent-error 

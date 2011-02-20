@@ -45,9 +45,9 @@
     ;; add to the object-layers
     (multiple-value-bind (objects hit) (gethash (render-level obj) object-layers)
       (if hit
-          (pushnew obj objects :test #'equal :key #'name)
-        (setf (gethash (render-level obj) object-layers)
-              (list obj))))))
+          (pushnew obj objects)
+          (setf (gethash (render-level obj) object-layers)
+                (list obj))))))
 
 (defmethod remove ((obj object) (manager object-manager))
   "Remove object from the object lists, the name hash, and the
@@ -56,7 +56,7 @@
     (multiple-value-bind (objects hit) (gethash (render-level obj) object-layers)
       (when hit
         (setf objects
-              (delete obj objects :test #'equal :key #'name))
+              (delete obj objects))
         (when (null objects)
           (remhash (render-level obj) object-layers)
           (setf render-order
