@@ -16,7 +16,7 @@
     :initform nil :accessor inbox :type list
     :documentation "A list of incoming messages to this object.")
    (render-level
-    :initform 0 :initarg :render-level :accessor render-level :type fixnum
+    :initform "base" :initarg :render-level :accessor render-level
 	:documentation "The layer to render this object on.")
    (render-cb
 	:initform nil :initarg :render-cb :accessor render-cb :type function
@@ -51,41 +51,28 @@
 (defmethod print-object ((obj object-nonexistent-error) stream)
   (write-string (text obj) stream))
 
-(defun get-object-by-name (obj-name)
-  (declare (simple-string obj-name))
-  (let ((obj (gethash obj-name (object-name-lookup (object-manager *game-state*)))))
-    (or obj
-        (error 'object-nonexistent-error
-               :text (format nil "object does not exist: \"~a\"" obj-name)))))
 
-(defmethod initialize-instance :after ((obj object) &key)
-  "Add newly created object instances to the current game-state."
-  (add obj *game-state*))
 
-(defmethod add ((obj object) (state game-state))
-  ;; add to the object list
-  (add obj (object-manager state)))
-
-(defmethod add ((obj object) (manager object-manager))
-  ;; add to the name hashtable
-  (with-slots (object-name-lookup objects) manager
-    (with-slots (name) obj
-      (multiple-value-bind (obj-in-hash hit) (gethash name object-name-lookup)
-        (declare (ignore obj-in-hash))
-        (if hit
-            (warn "Initializing an object of the same name \"~a\"" name)
-            (setf (gethash name object-name-lookup) obj))))
-
-    ;; TODO: perhaps test for duplicate or an existing object of the
-    ;; same name before adding?
-    (pushnew obj objects)))
-
-(defmethod remove ((obj object) (state game-state))
-  (remove obj (object-manager state)))
-
-(defmethod remove ((obj object) (manager object-manager))
-  "Remove object from the object lists and name hash."
-  (with-slots (objects object-name-lookup) manager
-    (setf objects
-          (delete obj objects :test #'equal :key #'name))
-    (remhash obj object-name-lookup)))
+(defmethod update ((obj object))
+  (with-slots (update-cb update-cb-control) obj
+    (flet ((call-update ()
+             (when update-cb
+               (funcall update-cb obj))))
+      (etypecase update-cb-control
+        (keyword (ecase update-cb-control
+                   (:all (call-update))
+                   (:one-shot (call-update)
+                              (setf update-cb-control :none))
+                   (:none nil)))
+        (cons (ecase (first update-cb-control)
+                (:ticks (let ((ticks (second update-cb-control)))
+                          (when (eql (mod *game-tick* ticks) 0)
+                            (call-update))))
+                (:turns (let ((num-turns (second update-cb-control)))
+                          (when (> num-turns 0)
+                            (call-update)
+                            (setf (second update-cb-control) (decf num-turns)))))
+                (:seconds (let* ((seconds (second update-cb-control))
+                                 (modulo (ceiling (/ (* seconds 1000) *ms-per-update*))))
+                            (when (eql (mod *game-tick* modulo) 0)
+                              (call-update))))))))))

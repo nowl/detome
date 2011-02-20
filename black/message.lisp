@@ -1,7 +1,9 @@
 (in-package #:black)
 
 (export '(make-and-send-message))
-(shadow '(type))
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (shadow '(type)))
 
 (defclass message ()
   ((sender
@@ -66,8 +68,9 @@
 (defun process-messages ()
   "Processes all messages in each object's inbox in the order they
   were sent."
-  (loop for obj in (objects (object-manager *game-state*)) do
-        (process-messages-for-obj obj)))
+  (loop for objects being the hash-values of (object-layers (object-manager *game-state*)) do
+       (loop for obj in objects do
+            (process-messages-for-obj obj))))
 
 (defun deliver-message (message &optional (type :sync))
   (declare (message message)

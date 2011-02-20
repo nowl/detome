@@ -3,6 +3,8 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (shadow '(remove)))
 
+(export '(add remove switch pause play render update))
+
 (defgeneric add (src dest)
   (:documentation
    "This represents the concept of adding a source object to a

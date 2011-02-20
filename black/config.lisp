@@ -11,8 +11,4 @@
 (defvar *screen-width* 1024)
 (defvar *screen-height* 768)
 
-(defvar *render-list* nil)
-(defvar *event-mode-hooks* nil)
-
-(defvar *object-list* nil)
-(defvar *object-name-lookup* (make-hash-table :test #'equal))
+(defvar *game-tick* 0)
