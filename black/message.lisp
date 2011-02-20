@@ -33,6 +33,8 @@
   (declare (message message))
   (if (null (type message))
       (error 'object-nonexistent-error :text (format nil "broadcast message has no type")))
+  (unless *game-state*
+    (return-from deliver-broadcast-message))
   (multiple-value-bind (objs hit) 
       (gethash (type message) (broadcast-receivers (object-manager *game-state*)))
     (when hit
@@ -68,9 +70,10 @@
 (defun process-messages ()
   "Processes all messages in each object's inbox in the order they
   were sent."
-  (loop for objects being the hash-values of (object-layers (object-manager *game-state*)) do
-       (loop for obj in objects do
-            (process-messages-for-obj obj))))
+  (when *game-state*
+    (loop for objects being the hash-values of (object-layers (object-manager *game-state*)) do
+         (loop for obj in objects do
+              (process-messages-for-obj obj)))))
 
 (defun deliver-message (message &optional (type :sync))
   (declare (message message)

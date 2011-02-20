@@ -5,8 +5,6 @@
 
 (export '(log set-log-level))
 
-(defvar *log-types-to-print* nil)
-
 (defvar *log-levels*
   '(:error
 	:warning

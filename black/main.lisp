@@ -9,6 +9,12 @@
 (defun get-tick-count ()  
   (coerce (truncate (system-ticks)) 'fixnum))
 
+(defmethod render ((obj null))
+  (log :warning "*game-state* seems to be nil!"))
+
+(defmethod update ((obj null))
+  (log :warning "*game-state* seems to be nil!"))
+
 (defun main-render (interpolation)
   (setf *interpolation* interpolation)
   (incf *render-tick*)
@@ -18,7 +24,7 @@
   (blit-surface *default-surface* *default-display*)
   (update-display))
 
-(defun main-update ()  
+(defun main-update ()
   (incf *game-tick*)
   (process-messages)
   (update *game-state*))
@@ -45,7 +51,7 @@
 	   (progn
 	     (incf *loops*)
 	     (incf *next-update-in-ms* *ms-per-update*)
-	     (update))
+	     (main-update))
 	   (progn
 	     (setf *loops* 0)
 	     (main-render (float (/ (- ,current-time (- *next-update-in-ms* *ms-per-update*)) *ms-per-update*))))))))

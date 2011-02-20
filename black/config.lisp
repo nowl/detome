@@ -4,13 +4,18 @@
           *screen-height*
 		  reset-globals))
 
-(defvar *updates-per-second* 15)
-(defvar *ms-per-update* (/ 1000 *updates-per-second*))
-(defvar *max-frame-skip* 5)
+(defparameter *updates-per-second* 15)
+(defparameter *ms-per-update* (/ 1000 *updates-per-second*))
+(defparameter *max-frame-skip* 5)
 
-(defvar *screen-width* 1024)
-(defvar *screen-height* 768)
+(defparameter *screen-width* 1024)
+(defparameter *screen-height* 768)
 
-(defvar *game-tick* 0)
-(defvar *render-tick* 0)
-(defvar *interpolation* 0)
+(defparameter *game-tick* 0)
+(defparameter *render-tick* 0)
+(defparameter *interpolation* 0)
+
+(defparameter *log-types-to-print*
+  '(:error
+    :warning
+    :info))
