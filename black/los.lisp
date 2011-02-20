@@ -61,7 +61,7 @@
 (defun build-distance-offsets ()
   (flet ((distance-to (x y)
            (sqrt (+ (* x x) (* y y)))))
-    (remove '(0 0) 
+    (cl:remove '(0 0) 
             (loop for x from (- *search-radius*) to *search-radius* append
                  (loop for y from (- *search-radius*) to *search-radius*
                     when (<= (distance-to x y) *search-radius*) collect (list x y)))

@@ -19,8 +19,6 @@
 	     (:file "object-manager")
 	     (:file "game-state")
 	     (:file "message")
-	     (:file "events")
-	     (:file "common")
 	     (:file "image")
 	     (:file "macros")
 	     (:file "los")

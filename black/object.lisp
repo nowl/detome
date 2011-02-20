@@ -39,7 +39,12 @@
                     to be called only once, :none to never be
                     called, (:turns N) to be called when the cadr is
                     greater than 0, N will be decremented if update is
-                    called.")))
+                    called.")
+   (meta
+    :initform (make-hash-table) :reader meta :type hash-table
+    :documentation "This can serve as any extra information to be
+                    stored in the object. Some uses include callbacks
+                    back into the object to handle input events.")))
 
 (defmethod print-object ((obj object) stream)
   "Print the game object by displaying it's name"
@@ -50,8 +55,6 @@
 
 (defmethod print-object ((obj object-nonexistent-error) stream)
   (write-string (text obj) stream))
-
-
 
 (defmethod update ((obj object))
   (with-slots (update-cb update-cb-control) obj
@@ -76,3 +79,7 @@
                                  (modulo (ceiling (/ (* seconds 1000) *ms-per-update*))))
                             (when (eql (mod *game-tick* modulo) 0)
                               (call-update))))))))))
+
+(defmethod render ((obj object))
+  (let ((render-cb (render-cb obj)))
+    (and render-cb (funcall render-cb obj *interpolation*))))

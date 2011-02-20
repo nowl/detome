@@ -12,3 +12,5 @@
 (defvar *screen-height* 768)
 
 (defvar *game-tick* 0)
+(defvar *render-tick* 0)
+(defvar *interpolation* 0)
