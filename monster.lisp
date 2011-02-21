@@ -101,7 +101,7 @@
   (setf *monsters-in-level* (delete monster *monsters-in-level*))
   (remove-object (name monster)))
 
-(define-object
+(make-object
     :name "monster garbage collector"
   :update-cb #'(lambda (obj)
                  (dolist (mon *monsters-in-level*)

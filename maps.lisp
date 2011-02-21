@@ -179,16 +179,16 @@
   (let* ((map-point (aref *level* y x)))
     (map-cell-walkable (gethash map-point *map-cells-by-number*))))
 
-(define-object
-    :name "weather builder"
-  :update-cb #'(lambda (obj)
-		 (ecase *environment*
-		   (:outside (cond ((eq *weather* :clear)
-				    (setf *weather* :dark)
-				    (textarea-log '("You feel the clastrophobic oppression of darkness."))
-				    (update-intensity-map (x *player*) (y *player*) 1.0))
-				   ((eq *weather* :dark)
-				    (setf *weather* :clear)
-				    (textarea-log '("The shadows become slightly less threatening as night becomes day."))
-				    (update-intensity-map (x *player*) (y *player*) 1.0))))))
-  :update-cb-control :none);; `(:seconds ,*day-night-cycle-in-seconds*))
+(make-object
+ :name "weather builder"
+ :update-cb #'(lambda (obj)
+                (ecase *environment*
+                  (:outside (cond ((eq *weather* :clear)
+                                   (setf *weather* :dark)
+                                   (textarea-log '("You feel the clastrophobic oppression of darkness."))
+                                   (update-intensity-map (x *player*) (y *player*) 1.0))
+                                  ((eq *weather* :dark)
+                                   (setf *weather* :clear)
+                                   (textarea-log '("The shadows become slightly less threatening as night becomes day."))
+                                   (update-intensity-map (x *player*) (y *player*) 1.0))))))
+ :update-cb-control :none);; `(:seconds ,*day-night-cycle-in-seconds*))

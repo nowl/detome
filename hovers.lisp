@@ -66,31 +66,31 @@
            (sdl:flood-fill-* 0 0 :surface rect-surf :color (hover-box-color hover))
            (sdl:draw-surface-at-* rect-surf (hover-x hover) (hover-y hover))))))
 
-(define-object
-    :name "hover mover updater"
-  :update-cb #'(lambda (obj)
-                 (loop for hover in *hover-messages* do
-                      (destructuring-bind (move-x move-y) (hover-mover hover)
-                        (loop for string in (hover-formatted-strings hover) do
-                             (when (and move-x
-                                        (typep string 'cons)
-                                        (eq :render-at (first string)))
-                               (setf (second string) (+ (second string) move-x)))
-                             (when (and move-y
-                                        (typep string 'cons)
-                                        (eq :render-at (first string)))
-                               (setf (third string) (+ (third string) move-y)))))))
-  :update-cb-control '(:ticks 1))
+(make-object
+ :name "hover mover updater"
+ :update-cb #'(lambda (obj)
+                (loop for hover in *hover-messages* do
+                     (destructuring-bind (move-x move-y) (hover-mover hover)
+                       (loop for string in (hover-formatted-strings hover) do
+                            (when (and move-x
+                                       (typep string 'cons)
+                                       (eq :render-at (first string)))
+                              (setf (second string) (+ (second string) move-x)))
+                            (when (and move-y
+                                       (typep string 'cons)
+                                       (eq :render-at (first string)))
+                              (setf (third string) (+ (third string) move-y)))))))
+ :update-cb-control '(:ticks 1))
 
-(define-object
-    :name "hover remover"
-  :update-cb #'(lambda (obj)
-                 (let (hovers-to-remove)
-                   (dolist (hover *hover-messages*)
-                     (when (hover-ttl hover)
-                       (decf (hover-ttl hover))
-                       (and (<= (hover-ttl hover) 0)
-                            (push hover hovers-to-remove))))
-                   (dolist (hover hovers-to-remove)
-                     (setf *hover-messages* (delete hover *hover-messages* :test #'eq)))))
-  :update-cb-control '(:ticks 1))
+(make-object
+ :name "hover remover"
+ :update-cb #'(lambda (obj)
+                (let (hovers-to-remove)
+                  (dolist (hover *hover-messages*)
+                    (when (hover-ttl hover)
+                      (decf (hover-ttl hover))
+                      (and (<= (hover-ttl hover) 0)
+                           (push hover hovers-to-remove))))
+                  (dolist (hover hovers-to-remove)
+                    (setf *hover-messages* (delete hover *hover-messages* :test #'eq)))))
+ :update-cb-control '(:ticks 1))
