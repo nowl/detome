@@ -40,8 +40,6 @@
     ;; add level to the render-order if it doesn't exist
     (pushnew (render-level obj) render-order :test #'equal)
     
-    ;; TODO: perhaps test for duplicate or an existing object of the
-    ;; same name before adding?
     ;; add to the object-layers
     (multiple-value-bind (objects hit) (gethash (render-level obj) object-layers)
       (if hit
