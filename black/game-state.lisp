@@ -3,7 +3,9 @@
 
 (in-package #:black)
 
-(export '(game-state))
+(export '(game-state
+          add-to-broadcast-receivers
+          lookup-by-name))
 
 (defclass game-state ()
   ((state 
@@ -61,9 +63,9 @@
   (with-slots (broadcast-receivers) (object-manager *game-state*)
     (multiple-value-bind (objects hit) (gethash recv-type broadcast-receivers)
       (if hit
-          (pushnew obj objects :test #'equal :key #'name)
-          (setf (gethash (name obj) broadcast-receivers)
-                (list (name obj)))))))
+          (pushnew obj objects)
+          (setf (gethash recv-type broadcast-receivers)
+                (list obj))))))
 
 (defun lookup-by-name (name)
   (with-slots (object-name-lookup) (object-manager *game-state*)
