@@ -25,13 +25,22 @@
                     and the recipient object of the message as an
                     argument")))
 
+(defmethod print-object ((obj message) stream)
+  (write-string "#<MESSAGE " stream)
+  (write-string (or (type obj) "NIL") stream)
+  (write-string " | " stream)
+  (write-string (sender obj) stream)
+  (write-string " --> " stream)
+  (write-string (or (receiver obj) "NIL") stream)
+  (write-string ">" stream))
+
 (defun process-message (message)
   (declare (message message))
   (funcall (action message) (sender message) (receiver message) (type message)))
 
 (defun deliver-broadcast-message (message type)
   (declare (message message))
-  (log :info "~a" message)
+  (log :debug "~a" message)
   (if (null (type message))
       (error 'object-nonexistent-error :text (format nil "broadcast message has no type")))
   (unless *game-state*
@@ -47,7 +56,7 @@
          (loop for obj in objs do
               (setf (receiver message) obj)
               (when (process-message message)
-                (return))))))))
+                (return t))))))))
 
 (defun deliver-directed-message (message type)
   (declare (message message))

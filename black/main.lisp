@@ -39,7 +39,7 @@
                        :action #'(lambda (sender receiver type)
                                    (multiple-value-bind (func hit) (gethash :sdl-event-cb (meta receiver))
                                      (if hit
-                                         (funcall #'func ,sdl-event-name)
+                                         (funcall func ,sdl-event-name ,args)
                                          nil)))
                        :type :async))))
 

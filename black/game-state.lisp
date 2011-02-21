@@ -5,6 +5,7 @@
 
 (export '(game-state
           add-to-broadcast-receivers
+          remove-from-broadcast-receivers
           lookup-by-name))
 
 (defclass game-state ()
@@ -62,10 +63,21 @@
 (defun add-to-broadcast-receivers (obj recv-type)
   (with-slots (broadcast-receivers) (object-manager *game-state*)
     (multiple-value-bind (objects hit) (gethash recv-type broadcast-receivers)
-      (if hit
-          (pushnew obj objects)
-          (setf (gethash recv-type broadcast-receivers)
+      (setf (gethash recv-type broadcast-receivers)
+            (if hit
+                (pushnew obj objects)          
                 (list obj))))))
+
+(defun remove-from-broadcast-receivers (obj recv-type)
+  (with-slots (broadcast-receivers) (object-manager *game-state*)
+    (multiple-value-bind (objects hit) (gethash recv-type broadcast-receivers)
+      (when hit
+        (setf (gethash recv-type broadcast-receivers)
+              (delete obj objects))
+
+        ;; delete key necessary
+        (when (null (gethash recv-type broadcast-receivers))
+          (remhash recv-type broadcast-receivers))))))        
 
 (defun lookup-by-name (name)
   (with-slots (object-name-lookup) (object-manager *game-state*)

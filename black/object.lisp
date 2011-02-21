@@ -2,10 +2,9 @@
 
 (export '(object
           name
-          get-object-by-name
-          remove-object
           update-cb
-          update-cb-control))
+          update-cb-control
+          meta))
 
 (defclass object ()
   ((name
@@ -48,8 +47,9 @@
 
 (defmethod print-object ((obj object) stream)
   "Print the game object by displaying it's name"
-  (write-string "object: " stream)
-  (write-string (name obj) stream))
+  (write-string "#<OBJECT \"" stream)
+  (write-string (name obj) stream)
+  (write-string "\">" stream))
 
 (define-condition object-nonexistent-error (error) 
   ((text :initarg :text :reader text)))

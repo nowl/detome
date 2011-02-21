@@ -45,20 +45,33 @@
     ;; add to the object-layers
     (multiple-value-bind (objects hit) (gethash (render-level obj) object-layers)
       (if hit
-          (pushnew obj objects)
+          (pushnew obj (gethash (render-level obj) object-layers))
           (setf (gethash (render-level obj) object-layers)
                 (list obj))))))
 
 (defmethod remove ((obj object) (manager object-manager))
   "Remove object from the object lists, the name hash, and the
    render-layers if necessary."
-  (with-slots (object-name-lookup object-layers render-order) manager
+  (with-slots (object-name-lookup object-layers render-order broadcast-receivers) manager
+    
+    ;; remove from layers and render-order if necessary
     (multiple-value-bind (objects hit) (gethash (render-level obj) object-layers)
       (when hit
-        (setf objects
+        (setf (gethash (render-level obj) object-layers)
               (delete obj objects))
-        (when (null objects)
+
+        ;; delete level is necessary
+        (when (null (gethash (render-level obj) object-layers))
           (remhash (render-level obj) object-layers)
           (setf render-order
-                (delete obj render-order :test #'equal :key #'render-level)))))
+                (delete (render-level obj) render-order :test #'equal)))))
+
+    ;; remove from broadcast-receivers
+    (loop for objects being the hash-values of broadcast-receivers using (hash-key key) do
+         (setf (gethash key broadcast-receivers)
+               (delete obj objects))
+         (when (null (gethash key broadcast-receivers))
+           (remhash key broadcast-receivers)))
+
+    ;; remove from object name lookup
     (remhash (name obj) object-name-lookup)))
