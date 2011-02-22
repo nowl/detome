@@ -116,13 +116,6 @@
                  (aref *explored-map* y x)
                  0.25)))))
 
-(defmacro clip (value a b)
-  `(if (<= ,value ,a)
-       ,a
-       (if (>= ,value ,b)
-           ,b
-           ,value)))
-
 (defun los-intensity-at-point (x y)
   (aref *intensity-map* y x))
 
@@ -154,7 +147,7 @@
 	  (* (- (y obj) (second *map-window*)) 32)))
 
 
-(defun draw-background (interpolation)
+(defun draw-background ()
   (destructuring-bind (map-height map-width) (array-dimensions *level*)
     (loop for x from (max (first *map-window*) 0) below (min map-width
                                                              (+ (third *map-window*)
@@ -182,6 +175,7 @@
 (make-object
  :name "weather builder"
  :update-cb #'(lambda (obj)
+                (declare (ignore obj))
                 (ecase *environment*
                   (:outside (cond ((eq *weather* :clear)
                                    (setf *weather* :dark)

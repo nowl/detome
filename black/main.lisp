@@ -36,10 +36,11 @@
                        :sender "main-loop"
                        :receiver nil
                        :mes-type "sdl-event"
-                       :action #'(lambda (sender receiver type)
+                       :action #'(lambda (sender receiver mes-type)
+                                   (declare (ignore sender mes-type))
                                    (multiple-value-bind (func hit) (gethash :sdl-event-cb (meta receiver))
                                      (if hit
-                                         (funcall func ,sdl-event-name ,args)
+                                         (funcall func ,sdl-event-name ,@args)
                                          nil)))
                        :type :async))))
 

@@ -67,7 +67,7 @@
                                :dmg-r-gen ,dmg-r-gen
                                :def-r-gen ,def-r-gen
                                :ai-cb ,ai-cb)))
-       (setf *monster-types-by-level* (remove ,name *monster-types-by-level* :key #'(lambda (x) (name (cadr x))) :test #'string=))
+       (setf *monster-types-by-level* (cl:remove ,name *monster-types-by-level* :key #'(lambda (x) (name (cadr x))) :test #'string=))
        (push (list ,level ,mt) *monster-types-by-level*)
        (setf *monster-types-by-level* (sort *monster-types-by-level* #'< :key #'car)))))
 
@@ -82,7 +82,14 @@
 (defun monsters-at (x y)
   (loop for mon in *monsters-in-level* when (and (= (x mon) x) (= (y mon) y)) collect mon))
 
-(defun draw-monsters (interpolation)  
+(defmacro clip (value a b)
+  `(if (<= ,value ,a)
+       ,a
+       (if (>= ,value ,b)
+           ,b
+           ,value)))
+
+(defun draw-monsters ()  
   (dolist (mon *monsters-in-level*)
     (multiple-value-bind (x y) (get-screen-pos-of mon)
       (let ((darken-amount (clip (- 1 (los-intensity-at-point (x mon) (y mon)))

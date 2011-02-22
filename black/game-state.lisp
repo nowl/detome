@@ -6,7 +6,8 @@
 (export '(game-state
           add-to-broadcast-receivers
           remove-from-broadcast-receivers
-          lookup-by-name))
+          lookup-by-name
+          set-render-order))
 
 (defclass game-state ()
   ((state 
@@ -82,3 +83,8 @@
 (defun lookup-by-name (name)
   (with-slots (object-name-lookup) (object-manager *game-state*)
     (gethash name object-name-lookup)))
+
+;; TODO: test this and remove the render-order stuff from add and remove
+(defun set-render-order (order)
+  (setf (render-order (object-manager *game-state*))
+        order))

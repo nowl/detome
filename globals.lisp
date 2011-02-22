@@ -48,3 +48,12 @@
 
 (def-resetable-var *environment* :outside)
 (def-resetable-var *weather* :clear)
+
+;; logging
+
+(set-log-level :debug)
+
+;; game states
+
+(def-resetable-var *play-game-state* (make-instance 'game-state))
+(switch *play-game-state*)

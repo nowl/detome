@@ -2,6 +2,9 @@
 
 (export '(*screen-width*
           *screen-height*
+          *game-tick*
+          *render-tick*
+          *interpolation*
 		  reset-globals))
 
 (defparameter *updates-per-second* 15)

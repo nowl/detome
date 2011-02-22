@@ -1,24 +1,26 @@
 (in-package #:detome)
 
-(defun take-turn ()
-  "Any objects that use :turns will have their number of turns incremented."
-  (loop for obj in black::*object-list* do
-       (with-slots (update-cb-control) obj
-         (when (and (consp update-cb-control) (eq (car update-cb-control) :turns))
-           (incf (second update-cb-control))))))
+(make-object
+ :name "background render"
+ :render-level "background"
+ :render-cb #'(lambda (obj)
+                (declare (ignore obj))
+                (draw-background)))
 
 (make-object
- :name "primary renderer"
- :render-cb #'(lambda (obj interpolation)
-                (draw-background interpolation)
-                (draw-monsters interpolation)
-                (draw-player interpolation)
-                (draw-hover-messages interpolation)
-                (draw-message-textarea *message-area-strings* interpolation)))
+ :name "base renderer"
+ :render-level "base"
+ :render-cb #'(lambda (obj)
+                (declare (ignore obj))
+                (draw-monsters)
+                (draw-player)
+                (draw-hover-messages)
+                (draw-message-textarea *message-area-strings*)))
 
 (make-object
- :name "render updater"
+ :name "bootstrap"
  :update-cb #'(lambda (obj)
+                (declare (ignore obj))
                 (setf *primary-font* (sdl:initialise-default-font *primary-font-name*))
                 (sdl:enable-alpha t :surface sdl:*default-display*)
                 (sdl:enable-alpha t :surface sdl:*default-surface*)
@@ -26,19 +28,17 @@
                 (define-images)
                 (update-intensity-map (x *player*) (y *player*) 1.0)
                 (clear-explored-map)
-                (clear-render-list)		 
                 (populate-monsters)
-                (add-to-render-list "primary renderer"))
+                (set-render-order '("background" "base")))
  :update-cb-control :one-shot)
-
-(make-object :name "event processor")
 
 (make-object :name "global message receiver"
              :update-cb-control '(:ticks 1))
 
 (defun detome (&optional (fullscreen nil))
   ;; reinit
-  (setf (update-cb-control (lookup-by-name "render updater")) :one-shot)
+  (set-render-order nil)
+  (setf (update-cb-control (lookup-by-name "bootstrap")) :one-shot)
 
   (textarea-log '("Welcome to " (:color "ff0000") "Detome" (:color "ffffff") "! The goal of this game is to hunt down the dark wizard Varlok and have some good looting fun on the way.")
                 :ttl 20)

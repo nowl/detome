@@ -10,23 +10,23 @@
                lispbuilder-sdl-image)
   :components
   ((:module "black"
-	    :components
-	    ((:file "package")
-	     (:file "log")
-	     (:file "generics")
-	     (:file "config")
-	     (:file "object")
-	     (:file "object-manager")
-	     (:file "game-state")
-	     (:file "message")
-	     (:file "image")
-	     (:file "macros")
-	     (:file "los")
-	     (:file "main")
-	     (:module "misc"
-		      :components
-		      ((:file "mid-disp")
-		       (:file "random"))
-		      :serial t))
-	    :serial t)))
+            :components
+            ((:file "package")
+             (:file "log")
+             (:file "generics")
+             (:file "config")
+             (:file "object")
+             (:file "object-manager")
+             (:file "game-state")
+             (:file "message")
+             (:file "image")
+             (:file "macros")
+             (:file "los")
+             (:file "main")
+             (:module "misc"
+                      :components
+                      ((:file "mid-disp")
+                       (:file "random"))
+                      :serial t))
+            :serial t)))
   

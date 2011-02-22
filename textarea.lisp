@@ -23,7 +23,7 @@
 
 (defvar *message-area-strings* nil)
 
-(defun draw-message-textarea (strings interpolation)
+(defun draw-message-textarea (strings)
   (let (pos-x pos-y (color (sdl:color :r #xff :g #xff :b #xff)))
     (loop for message in strings do
 	 (etypecase message

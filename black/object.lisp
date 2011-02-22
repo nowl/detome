@@ -83,4 +83,4 @@
 
 (defmethod render ((obj object))
   (let ((render-cb (render-cb obj)))
-    (and render-cb (funcall render-cb obj *interpolation*))))
+    (and render-cb (funcall render-cb obj))))

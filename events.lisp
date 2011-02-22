@@ -1,15 +1,5 @@
 (in-package #:detome)
 
-(add-quit-event #'common-quit-event)
-
-(defun press-escape-to-quit-event (&key key &allow-other-keys)
-  (cond ((sdl:key= key :sdl-key-escape)
-         (sdl:push-quit-event)
-         t)
-        (t nil)))
-
-(add-key-down-event #'press-escape-to-quit-event)
-
 (defun move-map-window-if-needed ()
   ;; The map window should stay relatively centered on the player
   ;; unless we are near an edge in which case the map window fills the
@@ -61,80 +51,80 @@
 												(:color ,sdl:*white*) "!")))
 			  (monsters (attack *player* (typecase monsters
 										   (cons (first monsters))
-										   (t monsters)))
-						(take-turn))
+										   (t monsters))))
+						;(take-turn))
 			  (t (setf x new-x y new-y)
-				 (take-turn)))))))
-
+				 ;(take-turn)))))))
+                 ))))))
 
 (defmacro gen-move-command (key-symbol delta-x delta-y)
   ``((sdl:key= key ,,key-symbol)
      (make-and-send-message 
       :sender "event processor" :receiver "global message receiver"
-      :action #'(lambda (sender receiver)
+      :action #'(lambda (sender receiver type)
+                  (declare (ignore sender receiver type))
                   (attempt-move-player ,,delta-x ,,delta-y)
                   (move-map-window-if-needed)
                   (update-intensity-map (x *player*) (y *player*) 1.0)))
      t))
 
-#|
-(mid-displace 10 10 :array *level* :roughness 100.0 
-									  :post-filter-func #'(lambda (val)
-															(map-cell-number (gethash 
-																			  (cond ((> val 0.85) "tree-on-mountain")
-																					((> val 0.65) "mountain")
-																					((> val 0.45) "tree-on-plain")
-																					(t "plain"))
-																			  *map-cells-by-name*))))
-						(update-intensity-map (x *player*) (y *player*) 1.0)))
-|#
+(make-object :name "event processor")
 
-(defun scroll-map-with-arrows-event (&key key &allow-other-keys)
-	(cond #.(gen-move-command :sdl-key-kp4 -1 0)
-		  #.(gen-move-command :sdl-key-kp7 -1 -1)
-		  #.(gen-move-command :sdl-key-kp8 0 -1)
-		  #.(gen-move-command :sdl-key-kp9 1 -1)
-		  #.(gen-move-command :sdl-key-kp6 1 0)
-		  #.(gen-move-command :sdl-key-kp3 1 1)
-		  #.(gen-move-command :sdl-key-kp2 0 1)
-		  #.(gen-move-command :sdl-key-kp1 -1 1)
-		  ((sdl:key= key :sdl-key-r)
-		   (make-and-send-message
-			:sender "event processor" :receiver "global message receiver"
-			:action #'(lambda (sender receiver)
-                        (let (start-pos)
-                          (setf *level* (array-map (generate-dungeon (array-dimension *level* 0)
-                                                                     (array-dimension *level* 1)
-                                                                     100)
-                                                   #'(lambda (tile i j)
-                                                       (map-cell-number
-                                                        (gethash
-                                                         (case tile
-                                                           (:wall "wall")
-                                                           (:floor (when (null start-pos)
-                                                                     (setf start-pos (list i j)))
-                                                                   "plain")
-                                                           (:hallway "plain")
-                                                           (otherwise "wall"))
-                                                         *map-cells-by-name*)))))
-                          (setf (x *player*) (second start-pos)
-                                (y *player*) (first start-pos))
-                          (update-intensity-map (x *player*) (y *player*) 1.0))))
-                                                     
-		   t)
-		  ((sdl:key= key :sdl-key-h)
-		   (make-and-send-message 
-			:sender "event processor" :receiver "global message receiver"
-			:action #'(lambda (sender receiver)
-						(add-health-hover)))
-		   t)
-		  ((sdl:key= key :sdl-key-j)
-		   (make-and-send-message
-			:sender "event processor" :receiver "global message receiver"
-			:action #'(lambda (sender receiver)
-						(add-damage-hover *player* -5)))
-		   t)
-		  (t nil)))
+(add-to-broadcast-receivers (lookup-by-name "event processor") "sdl-event")
 
-
-(add-key-down-event #'scroll-map-with-arrows-event)
+(set-meta (:sdl-event-cb "event processor")
+  #'(lambda (event-type &rest args)
+      (case event-type
+        (:quit-event t)
+        (:key-down-event
+         (let ((key (cadr (member :key args))))
+           (cond
+             ((sdl:key= key :sdl-key-escape) (sdl:push-quit-event) t)
+             #.(gen-move-command :sdl-key-kp4 -1 0)
+             #.(gen-move-command :sdl-key-kp7 -1 -1)
+             #.(gen-move-command :sdl-key-kp8 0 -1)
+             #.(gen-move-command :sdl-key-kp9 1 -1)
+             #.(gen-move-command :sdl-key-kp6 1 0)
+             #.(gen-move-command :sdl-key-kp3 1 1)
+             #.(gen-move-command :sdl-key-kp2 0 1)
+             #.(gen-move-command :sdl-key-kp1 -1 1)
+             ((sdl:key= key :sdl-key-r)
+              (make-and-send-message
+               :sender "event processor" :receiver "global message receiver"
+               :action #'(lambda (sender receiver)
+                           (declare (ignore sender receiver))
+                           (let (start-pos)
+                             (setf *level* (array-map (generate-dungeon (array-dimension *level* 0)
+                                                                        (array-dimension *level* 1)
+                                                                        100)
+                                                      #'(lambda (tile i j)
+                                                          (map-cell-number
+                                                           (gethash
+                                                            (case tile
+                                                              (:wall "wall")
+                                                              (:floor (when (null start-pos)
+                                                                        (setf start-pos (list i j)))
+                                                                      "plain")
+                                                              (:hallway "plain")
+                                                              (otherwise "wall"))
+                                                            *map-cells-by-name*)))))
+                             (setf (x *player*) (second start-pos)
+                                   (y *player*) (first start-pos))
+                             (update-intensity-map (x *player*) (y *player*) 1.0))))
+              
+              t)
+             ((sdl:key= key :sdl-key-h)
+              (make-and-send-message 
+               :sender "event processor" :receiver "global message receiver"
+               :action #'(lambda (sender receiver type)
+                           (declare (ignore sender receiver type))
+                           (add-health-hover)))
+              t)
+             ((sdl:key= key :sdl-key-j)
+              (make-and-send-message
+               :sender "event processor" :receiver "global message receiver"
+               :action #'(lambda (sender receiver type)
+                           (declare (ignore sender receiver type))
+                           (add-damage-hover *player* -5)))
+              t))))
+        (t nil))))

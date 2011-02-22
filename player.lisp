@@ -37,6 +37,6 @@
                (dmg (rand dmgmax dmgmin)))
           (hit actor1 actor2 (if (> a1-att a1-def) dmg 0)))))))
 
-(defun draw-player (interpolation)  
+(defun draw-player ()  
   (multiple-value-bind (x y) (get-screen-pos-of *player*)
     (sdl:draw-surface-at-* (get-image "player-front") x y)))

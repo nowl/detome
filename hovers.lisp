@@ -58,9 +58,9 @@
   (let ((text '((:color "ffffff") "This is a transparent hover test. Your hit points, mana, etc. will appear here. In " (:color "ff0000") "color!")))
     (make-hover-message 10 10 (- (* 32 (nth 2 *map-window*)) 10) "00ffff" #x80 text :ttl 100 :mover (list nil 4) :draw-rect nil :fit-height t)))
 
-(defun draw-hover-messages (interpolation)
+(defun draw-hover-messages ()
   (loop for hover in *hover-messages* do
-       (draw-message-textarea (hover-formatted-strings hover) interpolation)
+       (draw-message-textarea (hover-formatted-strings hover))
        (when (hover-draw-rect hover)
          (let ((rect-surf (sdl:create-surface (hover-width hover) (hover-height hover) :alpha (hover-alpha hover))))
            (sdl:flood-fill-* 0 0 :surface rect-surf :color (hover-box-color hover))

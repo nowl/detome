@@ -28,7 +28,7 @@
         (:key-down-event
          (destructuring-bind
                (_1 state _2 scancode _3 key _4 mod _5 mod-key _6 unicode) args
-           (when (eq key :sdl-key-escape)
+           (when (sdl:key= key :sdl-key-escape)
              (black:log :info "got escape key")))))))
 
 (black:set-meta (:sdl-event-cb "second object")
@@ -37,7 +37,7 @@
         (:key-down-event
          (destructuring-bind
                (_1 state _2 scancode _3 key _4 mod _5 mod-key _6 unicode) args
-           (when (eq key :sdl-key-a)
+           (when (sdl:key= key :sdl-key-a)
              (black:log :info "got 'a' key")))))))
 
            
