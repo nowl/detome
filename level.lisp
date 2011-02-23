@@ -21,6 +21,7 @@
  :name "bootstrap"
  :update-cb #'(lambda (obj)
                 (declare (ignore obj))
+                (build-rat-basement)
                 (setf *primary-font* (sdl:initialise-default-font *primary-font-name*))
                 (sdl:enable-alpha t :surface sdl:*default-display*)
                 (sdl:enable-alpha t :surface sdl:*default-surface*)
@@ -28,7 +29,7 @@
                 (define-images)
                 (update-intensity-map (x *player*) (y *player*) 1.0)
                 (clear-explored-map)
-                (populate-monsters)
+                ;;(populate-monsters)
                 (set-render-order '("background" "base")))
  :update-cb-control :one-shot)
 

@@ -1,7 +1,16 @@
 (in-package #:black)
 
 (export '(make-object
-          set-meta))
+          set-meta
+          with-gensyms))
+
+(defun collect-vars (vars)
+  (loop for var in vars collect
+       `(,var (gensym))))
+
+(defmacro with-gensyms ((&rest vars) &body body)
+  `(let ,(collect-vars vars)
+     ,@body))
 
 (defmacro make-object (&rest args)
   `(make-instance 'black:object

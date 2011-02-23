@@ -25,6 +25,13 @@
 	  (t (setf (nth 1 *map-window*) (- (y *player*) (/ window-height 2)))))))
 
 
+(defun take-turn ()
+  "Any objects that use :turns will have their number of turns incremented."
+  (every-object #'(lambda (obj)
+                    (with-slots (update-cb-control) obj
+                      (when (and (consp update-cb-control) (eq (car update-cb-control) :turns))
+                        (incf (second update-cb-control)))))))
+
 (defun attempt-move-player (delta-x delta-y)
   (with-slots (x y) *player*
     (let* ((new-x (+ x delta-x))
@@ -51,11 +58,10 @@
 												(:color ,sdl:*white*) "!")))
 			  (monsters (attack *player* (typecase monsters
 										   (cons (first monsters))
-										   (t monsters))))
-						;(take-turn))
+										   (t monsters)))
+						(take-turn))
 			  (t (setf x new-x y new-y)
-				 ;(take-turn)))))))
-                 ))))))
+                 (take-turn)))))))
 
 (defmacro gen-move-command (key-symbol delta-x delta-y)
   ``((sdl:key= key ,,key-symbol)

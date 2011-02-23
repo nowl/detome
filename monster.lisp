@@ -56,6 +56,8 @@
 (defparameter *monster-types-by-level* nil
   "This is a sorted list of level and monster-type objects.")
 
+(defparameter *monster-type-lookup* (make-hash-table :test 'equal))
+
 (defmacro define-monster-type (name image-name level hp-gen att-r-gen dmg-r-gen def-r-gen ai-cb)
   (let ((mt (gensym)))
     `(let ((,mt (make-instance 'monster-type
@@ -67,16 +69,19 @@
                                :dmg-r-gen ,dmg-r-gen
                                :def-r-gen ,def-r-gen
                                :ai-cb ,ai-cb)))
+       (setf (gethash ,name *monster-type-lookup*) ,mt)
        (setf *monster-types-by-level* (cl:remove ,name *monster-types-by-level* :key #'(lambda (x) (name (cadr x))) :test #'string=))
        (push (list ,level ,mt) *monster-types-by-level*)
        (setf *monster-types-by-level* (sort *monster-types-by-level* #'< :key #'car)))))
 
+(defun lookup-monster-type (name)
+  (gethash name *monster-type-lookup*))
 
 (defparameter *monsters-in-level* nil)
 
 (defun clear-monsters-from-level ()
   (loop for mon in *monsters-in-level* do
-       (remove-object (name mon)))
+       (remove mon *play-game-state*))
   (setf *monsters-in-level* nil))
 
 (defun monsters-at (x y)
@@ -106,7 +111,7 @@
 
 (defun remove-monster (monster)
   (setf *monsters-in-level* (delete monster *monsters-in-level*))
-  (remove-object (name monster)))
+  (remove monster *play-game-state*))
 
 (make-object
     :name "monster garbage collector"

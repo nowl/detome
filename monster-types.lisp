@@ -4,7 +4,7 @@
   (with-slots (x y) monster
 	(let ((new-x (+ x delta-x))
 		  (new-y (+ y delta-y)))
-	  (when (walkable new-x new-y)
+	  (when (walkable new-x new-y)        
 		(setf x new-x y new-y)))))
 
 (defmacro turn-helper (tt-move ttn-move &body body)
@@ -41,6 +41,7 @@
               (y (cond ((< (y *player*) (y obj)) -1)
                        ((> (y *player*) (y obj)) 1)
                        (t 0))))
+          (textarea-log `("The " (:color "ff0000") ,(name (mon-type obj)) (:color "ffffff") " yells, \"You won't escape!\""))
           (attempt-move-monster obj x y))
         (let ((x (- (random 3) 1))
               (y (- (random 3) 1)))

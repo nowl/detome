@@ -23,5 +23,10 @@
    (:file "events")
    (:file "maps")
    (:file "monster-types")
+   (:file "world-macros")
+   (:module "world"
+            :components
+            ((:file "rat-basement"))
+            :serial t)
    (:file "level"))
   :serial t)

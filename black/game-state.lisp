@@ -7,7 +7,8 @@
           add-to-broadcast-receivers
           remove-from-broadcast-receivers
           lookup-by-name
-          set-render-order))
+          set-render-order
+          every-object))
 
 (defclass game-state ()
   ((state 
@@ -88,3 +89,7 @@
 (defun set-render-order (order)
   (setf (render-order (object-manager *game-state*))
         order))
+
+(defun every-object (func)
+  (loop for val being the hash-value of (object-name-lookup (object-manager *game-state*)) do
+       (funcall func val)))
