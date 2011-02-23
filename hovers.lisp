@@ -1,6 +1,6 @@
 (in-package #:detome)
 
-(defvar *hover-messages* nil
+(defparameter *hover-messages* nil
   "Hover messages is a list of hover messages in progress.")
 
 (defstruct hover

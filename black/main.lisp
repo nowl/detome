@@ -3,8 +3,8 @@
 (export '(mainloop
 		  reset-game))
 
-(defvar *loops* 0)
-(defvar *next-update-in-ms* 0)
+(defparameter *loops* 0)
+(defparameter *next-update-in-ms* 0)
 
 (defun get-tick-count ()  
   (coerce (truncate (system-ticks)) 'fixnum))
@@ -58,7 +58,7 @@
 	     (main-render (float (/ (- ,current-time (- *next-update-in-ms* *ms-per-update*)) *ms-per-update*))))))))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (defvar *event-list-data*
+  (defparameter *event-list-data*
     '((:active-event (:gain gain :state state))
       (:key-down-event (:state state :scancode scancode :key key :mod mod :mod-key mod-key :unicode unicode))
       (:key-up-event (:state state :scancode scancode :key key :mod mod :mod-key mod-key :unicode unicode))

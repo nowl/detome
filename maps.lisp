@@ -76,9 +76,9 @@
 
 (setf *level* *rat-basement*)
 
-(defvar *intensity-map* (funcall #'make-array (array-dimensions *level*)))
+(defparameter *intensity-map* (funcall #'make-array (array-dimensions *level*)))
 
-(defvar *explored-map* (funcall #'make-array (array-dimensions *level*)))
+(defparameter *explored-map* (funcall #'make-array (array-dimensions *level*)))
 
 
 (defun attenuation-lookup (x y map)

@@ -8,8 +8,8 @@
   (setf *image-cache* (make-hash-table :test #'equal))
   (setf *tile-cache* (make-hash-table :test #'equal)))
 
-(defvar *image-cache* (make-hash-table :test #'equal))
-(defvar *tile-cache* (make-hash-table :test #'equal))
+(defparameter *image-cache* (make-hash-table :test #'equal))
+(defparameter *tile-cache* (make-hash-table :test #'equal))
 
 (defun define-image (name path clipping-rectangle)
   (declare (simple-string name path)

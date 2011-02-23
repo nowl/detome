@@ -56,7 +56,7 @@
       (push (car (last line)) mod-line)
       (nreverse mod-line))))
 
-(defvar *search-radius* 20)
+(defparameter *search-radius* 20)
 
 (defun build-distance-offsets ()
   (flet ((distance-to (x y)
@@ -67,7 +67,7 @@
                     when (<= (distance-to x y) *search-radius*) collect (list x y)))
             :test #'equal)))
 
-(defvar *squares-to-test* (build-distance-offsets))
+(defparameter *squares-to-test* (build-distance-offsets))
 
 (defun trace-light-intensity (x y src-x src-y attenuation-key)
   (let ((path (butlast (#+mod-bresenham

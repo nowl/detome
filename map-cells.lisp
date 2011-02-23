@@ -1,7 +1,7 @@
 (in-package #:detome)
 
-(defvar *map-cells-by-number* (make-hash-table :test #'eq))
-(defvar *map-cells-by-name* (make-hash-table :test #'equal))
+(defparameter *map-cells-by-number* (make-hash-table :test #'eq))
+(defparameter *map-cells-by-name* (make-hash-table :test #'equal))
 
 (defstruct map-cell
   number

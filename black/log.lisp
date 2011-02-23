@@ -5,7 +5,7 @@
 
 (export '(log set-log-level))
 
-(defvar *log-levels*
+(defparameter *log-levels*
   '(:error
 	:warning
 	:info

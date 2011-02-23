@@ -1,14 +1,8 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (dolist (dir (directory "C:\\Documents and Settings\\mjp\\.sbcl\\systems\\*"))
-	(push dir asdf:*central-registry*)))
+  (load "/home/nowl/quicklisp/setup.lisp"))
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (require 'cffi))
+(ql:quickload "lispbuilder-sdl")
+(ql:quickload "lispbuilder-sdl-image")
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (push "c:\\Documents and Settings\\mjp\\Desktop\\incoming\\sdl_test\\" cffi:*foreign-library-directories*)
-  (asdf:oos 'asdf:load-op 'lispbuilder-sdl)
-  (asdf:oos 'asdf:load-op 'lispbuilder-sdl-image))
-
+(asdf:oos 'asdf:load-op 'black-engine)
 (asdf:oos 'asdf:load-op 'detome)
-

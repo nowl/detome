@@ -9,7 +9,6 @@
   :depends-on (black-engine)
   :components
   ((:file "package")
-   (:file "resetable")
    (:file "globals")
    (:file "message")
    (:file "actors")

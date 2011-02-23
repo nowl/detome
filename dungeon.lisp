@@ -2,12 +2,12 @@
 
 (export '(generate-dungeon))
 
-(defvar *build-types*
+(defparameter *build-types*
   '((hallway 10)
     (room 1)
     (floor-space 1)))
 
-(defvar *walls*)
+(defparameter *walls* nil)
 
 (defun not-edge-tile (dungeon y x)
   (let ((h (array-dimension dungeon 0))

@@ -53,7 +53,7 @@
                     min-pos)))
       (create-monster-from-type x y (cadr (nth val *monster-types-by-level*))))))
 
-(defvar *monster-types-by-level* nil
+(defparameter *monster-types-by-level* nil
   "This is a sorted list of level and monster-type objects.")
 
 (defmacro define-monster-type (name image-name level hp-gen att-r-gen dmg-r-gen def-r-gen ai-cb)
@@ -72,7 +72,7 @@
        (setf *monster-types-by-level* (sort *monster-types-by-level* #'< :key #'car)))))
 
 
-(defvar *monsters-in-level* nil)
+(defparameter *monsters-in-level* nil)
 
 (defun clear-monsters-from-level ()
   (loop for mon in *monsters-in-level* do
