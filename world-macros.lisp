@@ -1,5 +1,11 @@
 (in-package #:detome)
 
+(defmacro set-level (map)
+  (let ((h (length map))
+        (w (length (car map))))
+    `(setf *level* (make-array '(,h ,w)
+                               :initial-contents ',map))))
+
 (defmacro place-monster (name x y)
   (with-gensyms (mt)
     `(let ((,mt (lookup-monster-type ,name)))
