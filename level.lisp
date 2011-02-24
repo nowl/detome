@@ -14,8 +14,16 @@
                 (declare (ignore obj))
                 (draw-monsters)
                 (draw-player)
-                (draw-hover-messages)
+                (draw-hover-messages)))
+
+(make-object
+ :name "textarea renderer"
+ :render-level "textarea"
+ :render-cb #'(lambda (obj)
+                (declare (ignore obj))
                 (draw-message-textarea *message-area-strings*)))
+
+(add (lookup-by-name "textarea renderer") *message-game-state*)
 
 (make-object
  :name "bootstrap"
@@ -30,7 +38,7 @@
                 (update-intensity-map (x *player*) (y *player*) 1.0)
                 (clear-explored-map)
                 ;;(populate-monsters)
-                (set-render-order '("background" "base")))
+                (set-render-order '("background" "base" "textarea")))
  :update-cb-control :one-shot)
 
 (make-object :name "global message receiver"

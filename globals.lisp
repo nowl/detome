@@ -1,6 +1,6 @@
 (in-package #:detome)
 
-(defparameter *map-window* '(0 0 24 22)
+(defparameter *map-window* '(0 0 32 22)
   "The viewport of the map on the screen in terms of tiles. The
   ordering goes x and y location of the upper left corner of the map
   then width and height follow.")

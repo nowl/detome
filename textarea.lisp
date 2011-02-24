@@ -21,6 +21,8 @@
                 (setf *message-area-rawtext* nil))
  :update-cb-control '(:seconds 0.1))
 
+(add (lookup-by-name "message textarea updater") *message-game-state*)
+
 (defparameter *message-area-strings* nil)
 
 (defun draw-message-textarea (strings)

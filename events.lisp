@@ -78,9 +78,6 @@
 
 (add-to-broadcast-receivers (lookup-by-name "event processor") "sdl-event")
 
-;;(defparameter *test-game-state* (make-instance 'game-state))
-;;(setf *event-receiver-object* (lookup-by-name "event processor"))
-
 (set-meta (:sdl-event-cb "event processor")
   #'(lambda (event-type &rest args)
       (case event-type
@@ -97,11 +94,8 @@
              #.(gen-move-command :sdl-key-kp3 1 1)
              #.(gen-move-command :sdl-key-kp2 0 1)
              #.(gen-move-command :sdl-key-kp1 -1 1)
-             ;; ((sdl:key= key :sdl-key-m)
-             ;;  (switch *test-game-state*)
-             ;;  (add-to-broadcast-receivers *event-receiver-object* "sdl-event"))
-             ;; ((sdl:key= key :sdl-key-n)
-             ;;  (switch *play-game-state*))
+             ((sdl:key= key :sdl-key-m)
+              (switch-to-message-game-state))
              ((sdl:key= key :sdl-key-r)
               (make-and-send-message
                :sender "event processor" :receiver "global message receiver"
