@@ -38,7 +38,7 @@
                 (update-intensity-map (x *player*) (y *player*) 1.0)
                 (clear-explored-map)
                 ;;(populate-monsters)
-                (set-render-order '("background" "base" "textarea")))
+                (set-render-order '("background" "base" "inanimate" "textarea")))
  :update-cb-control :one-shot)
 
 (make-object :name "global message receiver"

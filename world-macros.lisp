@@ -22,3 +22,12 @@
                             :update-cb (ai-cb ,mt)
                             :update-cb-control '(:turns 0)) 
              *monsters-in-level*))))
+
+(defmacro make-inanimate (name x y image)
+  (with-gensyms (obj)
+    `(let ((,obj (make-object :name ,name 
+                              :render-level "inanimate"
+                              :render-cb #'inanimate-renderer)))
+       (set-meta (:image ,obj) ,image)
+       (set-meta (:x ,obj) ,x)
+       (set-meta (:y ,obj) ,y))))

@@ -105,9 +105,11 @@
         ;; otherwise return the explored map intensity
         (aref *explored-map* y x))))
 
+(defun darken-amount-at-point (x y)
+  (clip (- 1 (total-intensity-at-point x y)) 0.0 1.0))
+
 (defun image-from-maps (x y)
-  (let ((darken-amount (clip (- 1 (total-intensity-at-point x y))
-                             0.0 1.0)))
+  (let ((darken-amount (darken-amount-at-point x y)))
     (let* ((map-point (aref *level* y x))
            (images (map-cell-image (gethash map-point *map-cells-by-number*))))
       (etypecase images
@@ -139,6 +141,13 @@
                                             (* (- x (first *map-window*)) 32)
                                             (* (- y (second *map-window*)) 32))))))))
 
+(defun inanimate-renderer (obj)
+  (let ((image (get-meta :image obj))
+        (x (get-meta :x obj))
+        (y (get-meta :y obj)))
+    (sdl:draw-surface-at-* (get-image image :darken (darken-amount-at-point x y))
+                           (* (- x (first *map-window*)) 32)
+                           (* (- y (second *map-window*)) 32))))
 
 (defun walkable (x y)
   (let ((level-width (array-dimension *level* 1))

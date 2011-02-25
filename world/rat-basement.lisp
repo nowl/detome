@@ -30,6 +30,8 @@
     (5 5 5 5 5 5 5 5 6 5 5 5 6 5 5 5 5 5 5 5 5 5 5 5 5 5 6 6 5 5 5 6)
     (5 5 5 5 5 5 5 5 6 5 5 5 6 5 5 5 5 5 5 5 5 5 5 5 5 5 6 6 5 5 5 6)))
 
+  (make-inanimate "test" 16 6 "tree")
+
 
   (place-monster "giant rat" 3 2)
   (place-monster "giant rat" 4 2)
