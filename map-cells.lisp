@@ -51,3 +51,13 @@
   :attenuation '(0.1 :dark 0.6)
   :walkable t
   :image "tree")
+(define-map-cell 9
+  "dust-1"
+  :attenuation '(0.1 :dark 0.6)
+  :walkable t
+  :image "dust-1")
+(define-map-cell 10
+  "dust-2"
+  :attenuation '(0.1 :dark 0.6)
+  :walkable t
+  :image "dust-2")

@@ -26,6 +26,7 @@
              (:module "misc"
                       :components
                       ((:file "mid-disp")
+                       (:file "perlin")
                        (:file "random"))
                       :serial t))
             :serial t)))

@@ -33,8 +33,10 @@
 
   (place-player 1 4)
 
-  (loop for x from 6 below 16 do
-       (make-scenery "tree" 16 x))
+  (loop for x below *level-width* do
+       (loop for y below *level-height* do
+            (if (and (> (perlin2d x y 1 4) 0.6) (equal (aref *level* y x) '(5)))
+                (make-scenery (random-choice '("dust-1" "dust-2")) x y))))
 
   (place-monster "rat" 2 1)
   (place-monster "rat" 3 2)
@@ -50,4 +52,3 @@
       (set-meta (:visited *player*)
                 (append visited-exists '("rat-basement")))
       (clear-explored-map))))
-
