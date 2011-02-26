@@ -97,7 +97,7 @@
 (defun draw-monsters ()  
   (dolist (mon *monsters-in-level*)
     (multiple-value-bind (x y) (get-screen-pos-of mon)
-      (let ((darken-amount (clip (- 1 (los-intensity-at-point (x mon) (y mon)))
+      (let ((darken-amount (clip (- 1 (find-in-intensity-map (x mon) (y mon)))
                                  0.0 1.0)))
         (when (< darken-amount 1.0)
           (sdl:draw-surface-at-* (get-image (image-name mon) :darken darken-amount) x y))))))

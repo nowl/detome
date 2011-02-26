@@ -1,28 +1,24 @@
 (in-package #:detome)
 
+;; The map window should stay relatively centered on the player unless
+;; we are near an edge in which case the map window fills the view.
 (defun move-map-window-if-needed ()
-  ;; The map window should stay relatively centered on the player
-  ;; unless we are near an edge in which case the map window fills the
-  ;; view.
-
-  (let ((level-height (array-dimension *level* 0))
-	(level-width (array-dimension *level* 1))
-	(window-width (nth 2 *map-window*))
-	(window-height (nth 3 *map-window*)))
+  (let ((window-width (nth 2 *map-window*))
+        (window-height (nth 3 *map-window*)))
 
     ;; handle x direction
     (cond ((< (x *player*) (/ window-width 2))
-	   (setf (nth 0 *map-window*) 0))
-	  ((> (x *player*) (- level-width (/ window-width 2)))
-	   (setf (nth 0 *map-window*) (- level-width window-width)))
-	  (t (setf (nth 0 *map-window*) (- (x *player*) (/ window-width 2)))))
+           (setf (nth 0 *map-window*) 0))
+          ((> (x *player*) (- *level-width* (/ window-width 2)))
+           (setf (nth 0 *map-window*) (- *level-width* window-width)))
+          (t (setf (nth 0 *map-window*) (- (x *player*) (/ window-width 2)))))
 
     ;; handle y direction
     (cond ((< (y *player*) (/ window-height 2))
-	   (setf (nth 1 *map-window*) 0))
-	  ((> (y *player*) (- level-height (/ window-height 2)))
-	   (setf (nth 1 *map-window*) (- level-height window-height)))
-	  (t (setf (nth 1 *map-window*) (- (y *player*) (/ window-height 2)))))))
+           (setf (nth 1 *map-window*) 0))
+          ((> (y *player*) (- *level-height* (/ window-height 2)))
+           (setf (nth 1 *map-window*) (- *level-height* window-height)))
+          (t (setf (nth 1 *map-window*) (- (y *player*) (/ window-height 2)))))))
 
 
 (defun take-turn ()

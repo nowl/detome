@@ -61,3 +61,8 @@
   :attenuation '(0.1 :dark 0.6)
   :walkable t
   :image '("dirty-cement-floor" "tree"))
+(define-map-cell 8
+  "tree"
+  :attenuation '(0.1 :dark 0.6)
+  :walkable t
+  :image '("tree"))

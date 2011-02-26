@@ -28,11 +28,7 @@
          ,@body))
   
 (defmacro get-meta (type object)
-  (with-gensyms (val hit)
-    `(multiple-value-bind (,val ,hit) (gethash ,type (black:meta
-                                                      (etypecase ,object
-                                                        (string (black:lookup-by-name ,object))
-                                                        (object ,object))))
-       (if ,hit
-           ,val
-           (error "~a doesn't exist in ~a" ,type ,object)))))
+  `(gethash ,type (black:meta
+                   (etypecase ,object
+                     (string (black:lookup-by-name ,object))
+                     (object ,object)))))

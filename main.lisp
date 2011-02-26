@@ -25,6 +25,9 @@
 
 (add (lookup-by-name "textarea renderer") *message-game-state*)
 
+;; This is a one-shot updater that sets up some various sdl-specific
+;; things that are required after sdl-init and also serves to
+;; bootstrap the game and enter the first level.
 (make-object
  :name "bootstrap"
  :update-cb #'(lambda (obj)
@@ -35,21 +38,25 @@
                 (sdl:enable-alpha t :surface sdl:*default-surface*)
                 (sdl:enable-key-repeat 500 50)
                 (define-images)
-                (update-intensity-map (x *player*) (y *player*) 1.0)
-                (clear-explored-map)
+                ;;(update-intensity-map (x *player*) (y *player*) 1.0)
+                ;;(clear-explored-map)
                 ;;(populate-monsters)
-                (set-render-order '("background" "base" "inanimate" "textarea")))
+                (set-render-order '("background"
+                                    "scenery"
+                                    "items"
+                                    "base"
+                                    "textarea")))
  :update-cb-control :one-shot)
 
 (make-object :name "global message receiver"
              :update-cb-control '(:ticks 1))
 
+;; This is the main entry point. It should do any initialization
+;; before entering the mainloop in black.
 (defun detome (&optional (fullscreen nil))
   ;; reinit
   (set-render-order nil)
   (setf (update-cb-control (lookup-by-name "bootstrap")) :one-shot)
 
-  (textarea-log '("Welcome to " (:color "ff0000") "Detome" (:color "ffffff") "! The goal of this game is to hunt down the dark wizard Varlok and have some good looting fun on the way.")
-                :ttl 20)
-  (textarea-log '("You awaken to rats. You have no recollection of how you got here but your head is aching.") :ttl 30)
+  (textarea-log '("Welcome to " (:color "ff0000") "Detome" (:color "ffffff") "!"))
   (mainloop :sdl-flags (if fullscreen sdl:sdl-fullscreen 0)))

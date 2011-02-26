@@ -3,8 +3,17 @@
 (defmacro set-level (map)
   (let ((h (length map))
         (w (length (car map))))
-    `(setf *level* (make-array '(,h ,w)
-                               :initial-contents ',map))))
+    (with-gensyms (i j)
+      `(progn
+         (setf *level-width* ,w
+               *level-height* ,h
+               *level* (make-array '(,h ,w)))
+         (loop for ,i below ,h do
+              (loop for ,j below ,w do
+                   (setf (aref *level* ,i ,j)
+                         (list (nth ,j (nth ,i ',map))))))
+         (clear-intensity-map)
+         (clear-explored-map)))))
 
 (defmacro place-monster (name x y)
   (with-gensyms (mt)
@@ -23,11 +32,19 @@
                             :update-cb-control '(:turns 0)) 
              *monsters-in-level*))))
 
-(defmacro make-inanimate (name x y image)
+(defmacro make-scenery (image x y)
   (with-gensyms (obj)
-    `(let ((,obj (make-object :name ,name 
-                              :render-level "inanimate"
-                              :render-cb #'inanimate-renderer)))
+    `(let ((,obj (make-object :name (symbol-name (gensym ,image))
+                              :render-level "scenery"
+                              :render-cb #'scenery-renderer)))
+       (push (map-cell-number (gethash ,image *map-cells-by-name*))
+             (aref *level* ,y ,x))
        (set-meta (:image ,obj) ,image)
        (set-meta (:x ,obj) ,x)
        (set-meta (:y ,obj) ,y))))
+
+(defmacro place-player (x y)
+  `(progn
+     (setf (x *player*) ,x
+           (y *player*) ,y)
+     (update-intensity-map ,x ,y 1.0)))

@@ -29,5 +29,5 @@
             :components
             ((:file "rat-basement"))
             :serial t)
-   (:file "level"))
+   (:file "main"))
   :serial t)

@@ -8,15 +8,15 @@
 		(setf x new-x y new-y)))))
 
 (defmacro turn-helper (tt-move ttn-move &body body)
-  `(let ((ticks-till-next-move (cdr (assoc :ttn-move (meta obj))))
-         (ticks-till-move (cdr (assoc :tt-move (meta obj)))))
+  `(let ((ticks-till-next-move (get-meta :ttn-move obj))
+         (ticks-till-move (get-meta :tt-move obj)))
      (cond ((null ticks-till-next-move)
-            (push (cons :tt-move ,tt-move) (meta obj))
-            (push (cons :ttn-move ,ttn-move) (meta obj)))
+            (set-meta (:tt-move obj) ,tt-move)
+            (set-meta (:ttn-move obj) ,ttn-move))
            ((>= ticks-till-next-move ticks-till-move)
             ,@body
-            (rplacd (assoc :ttn-move (meta obj)) 0))
-           (t (rplacd (assoc :ttn-move (meta obj)) (1+ ticks-till-next-move))))))
+            (set-meta (:tt-move obj) 0))
+           (t (set-meta (:ttn-move obj) (1+ ticks-till-next-move))))))
 
 (defgeneric random-walk-movement (obj)
   (:method ((obj actor))
