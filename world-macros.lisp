@@ -34,11 +34,10 @@
 
 (defmacro make-scenery (image x y)
   (with-gensyms (obj)
-    `(let ((,obj (make-object :name (symbol-name (gensym ,image))
-                              :render-level "scenery"
-                              :render-cb #'scenery-renderer)))
-       (push (map-cell-number (gethash ,image *map-cells-by-name*))
-             (aref *level* ,y ,x))
+    `(let ((,obj (make-object :name (symbol-name (gensym ,image)))))
+       (setf (aref *level* ,y ,x)
+             (append (aref *level* ,y ,x)
+                     (list (map-cell-number (gethash ,image *map-cells-by-name*)))))
        (set-meta (:image ,obj) ,image)
        (set-meta (:x ,obj) ,x)
        (set-meta (:y ,obj) ,y))))

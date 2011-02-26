@@ -32,7 +32,6 @@
  :name "bootstrap"
  :update-cb #'(lambda (obj)
                 (declare (ignore obj))
-                (build-rat-basement)
                 (setf *primary-font* (sdl:initialise-default-font *primary-font-name*))
                 (sdl:enable-alpha t :surface sdl:*default-display*)
                 (sdl:enable-alpha t :surface sdl:*default-surface*)
@@ -42,10 +41,11 @@
                 ;;(clear-explored-map)
                 ;;(populate-monsters)
                 (set-render-order '("background"
-                                    "scenery"
                                     "items"
                                     "base"
-                                    "textarea")))
+                                    "textarea"))
+                (build-rat-basement))
+ 
  :update-cb-control :one-shot)
 
 (make-object :name "global message receiver"

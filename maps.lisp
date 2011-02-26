@@ -22,23 +22,27 @@
                                            (first att))))))
                          atts))))
 
+;; hashing explored-map and intensity-map over x and y coordinates,
+;; this seems to work efficiently so far..
 (defmacro make-map-functions (name func)
   (let ((func1 (intern (string-upcase (format nil "clear-~a" (string func)))))
         (func2 (intern (string-upcase (format nil "find-in-~a" (string func)))))
         (func3 (intern (string-upcase (format nil "set-in-~a" (string func))))))
     `(progn
        (defun ,func1 ()
-         (setf ,name nil))
+         (setf ,name (make-hash-table)))
        (defun ,func2 (x y)
-         (let ((res (assoc (list x y) ,name :test #'equal)))
-           (if res
-               (cadr res)
+         (let ((sub (gethash x ,name)))
+           (if sub
+               (or (gethash y sub) 0.0)
                0.0)))
        (defun ,func3 (x y val)
-         (let ((elem (assoc (list x y) ,name :test #'equal)))
-           (if elem
-               (rplacd (assoc (list x y) ,name :test #'equal) (list val))
-               (push `((,x ,y) ,val) ,name)))))))
+         (let ((sub (gethash x ,name)))
+           (if sub
+               (setf (gethash y sub) val)
+               (progn
+                 (setf (gethash x ,name) (make-hash-table))
+                 (,func3 x y val))))))))
 
 (make-map-functions *explored-map* explored-map)
 (make-map-functions *intensity-map* intensity-map)
@@ -69,14 +73,11 @@
 
 (defun image-from-maps (x y)
   (let ((darken-amount (darken-amount-at-point x y)))
-    ;; only return the first (the actual "map" one, the rest are
-    ;; scenery
-    (let* ((map-point (car (aref *level* y x)))
-           (images (map-cell-image (gethash map-point *map-cells-by-number*))))
-      (etypecase images
-        (cons (loop for image in images collecting
-                   (get-image image :darken darken-amount)))
-        (string (list (get-image images :darken darken-amount)))))))
+    (let* ((map-points (aref *level* y x))
+           (images (mapcar #'(lambda (mp) (map-cell-image (gethash mp *map-cells-by-number*)))
+                           map-points)))
+      (loop for image in images collecting
+           (get-image image :darken darken-amount)))))
 
 (defgeneric get-screen-pos-of (obj)
   (:documentation 

@@ -1,7 +1,7 @@
 (in-package #:detome)
 
 (defun build-rat-basement ()
-  
+  (clear-intensity-map)
   (clear-monsters-from-level)
 
   (set-level
@@ -14,11 +14,12 @@
     (5 5 5 5 5 5 5 5 6 5 5 5 6 5 5 5 5 5 5 5 5 5 5 5 5 5 6 6 5 5 5 6)
     (5 5 5 5 5 5 5 5 6 5 5 5 6 5 5 5 5 5 5 5 5 5 5 5 5 5 6 6 5 5 5 6)
     (5 5 5 5 5 5 5 5 6 5 5 5 6 5 5 5 5 5 5 5 5 5 5 5 5 5 6 6 5 5 5 6)
-    (5 5 5 5 5 5 5 5 5 5 5 5 6 5 5 5 5 5 5 5 1 7 7 1 5 5 5 5 5 5 5 5)
-    (5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 1 7 7 1 5 5 5 5 5 5 5 6)
-    (5 5 5 5 5 5 5 5 6 5 5 5 5 5 5 5 5 5 5 5 1 7 7 1 5 5 6 6 5 5 5 6)
-    (5 5 5 5 5 5 5 5 6 5 5 5 5 5 5 5 5 5 5 5 1 7 7 1 5 5 6 6 5 5 5 6)
+    (5 5 5 5 5 5 5 5 5 5 5 5 6 5 5 5 5 5 5 5 1 5 5 1 5 5 5 5 5 5 5 5)
+    (5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 1 5 5 1 5 5 5 5 5 5 5 6)
+    (5 5 5 5 5 5 5 5 6 5 5 5 5 5 5 5 5 5 5 5 1 5 5 1 5 5 6 6 5 5 5 6)
+    (5 5 5 5 5 5 5 5 6 5 5 5 5 5 5 5 5 5 5 5 1 5 5 1 5 5 6 6 5 5 5 6)
     (5 5 5 5 5 5 5 5 6 5 5 5 6 5 5 5 5 5 5 5 1 1 1 1 5 5 6 6 5 5 5 6)
+    (5 5 5 5 5 5 5 5 6 5 5 5 6 5 5 5 5 5 5 5 5 5 5 5 5 5 6 6 5 5 5 6)
     (5 5 5 5 5 5 5 5 6 5 5 5 6 5 5 5 5 5 5 5 5 5 5 5 5 5 6 6 5 5 5 6)
     (5 5 5 5 5 5 5 5 6 5 5 5 6 5 5 5 5 5 5 5 5 5 5 5 5 5 6 6 5 5 5 6)
     (5 5 5 5 5 5 5 5 6 5 5 5 6 5 5 5 5 5 5 5 5 5 5 5 5 5 6 6 5 5 5 6)
@@ -32,11 +33,15 @@
 
   (place-player 1 4)
 
-  (make-scenery "tree" 16 6)
+  (loop for x from 6 below 16 do
+       (make-scenery "tree" 16 x))
 
-  (place-monster "giant rat" 3 2)
-  (place-monster "giant rat" 4 2)
-  (place-monster "giant rat" 5 2)
+  (place-monster "rat" 2 1)
+  (place-monster "rat" 3 2)
+  (place-monster "rat" 4 2)
+  (place-monster "rat" 4 3)
+  (place-monster "rat" 5 4)
+  (place-monster "giant rat" 6 1)
 
   ;; If this place has not been visited before..
   (let ((visited-exists (get-meta :visited *player*)))
