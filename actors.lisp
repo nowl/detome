@@ -13,6 +13,9 @@
    (hp
     :initarg :hp :accessor hp :type single-float :documentation
     "The current health of the actor.")
+   (hp-max
+    :initarg :hp-max :accessor hp-max :type single-float :documentation
+    "The current max health of the actor.")
    (att-r
 	:initarg :att-r :accessor att-r :type single-float :documentation
 	"Attack rating of the actor.")

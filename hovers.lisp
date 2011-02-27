@@ -48,9 +48,9 @@
                  :formatted-strings strings)
      *hover-messages*)))
 
-(defun add-damage-hover (actor amount)
+(defun add-damage-hover (actor amount color)
   (declare (actor actor))
-  (let ((text `((:color "ff0000") ,amount))
+  (let ((text `((:color ,color) ,amount))
         (x-y (multiple-value-list (get-screen-pos-of actor))))
     (make-hover-message (+ 8 (nth 0 x-y)) (nth 1 x-y) 100 "ff0000" #xa0 text :mover (list nil -3) :ttl 8 :draw-rect nil :fit-height t)))
 

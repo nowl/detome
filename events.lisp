@@ -90,7 +90,7 @@
              #.(gen-move-command :sdl-key-kp3 1 1)
              #.(gen-move-command :sdl-key-kp2 0 1)
              #.(gen-move-command :sdl-key-kp1 -1 1)
-             ((sdl:key= key :sdl-key-m)
+             ((sdl:key= key :sdl-key-space)
               (setf *draw-textarea-window* (not *draw-textarea-window*)
                     *draw-message-exclamation* nil))
              ((sdl:key= key :sdl-key-r)

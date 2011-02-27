@@ -45,6 +45,12 @@
   (place-monster "rat" 5 4)
   (place-monster "giant rat" 6 1)
 
+  (loop for x below *level-width* do
+       (loop for y below *level-height* do
+            (when (eql (car (aref *level* y x)) 5)
+              (cond ((> (perlin2d x y 1 2) 0.95) (place-monster "giant rat" x y))
+                    ((> (perlin2d x y 1 2) 0.9) (place-monster "rat" x y))))))
+
   ;; If this place has not been visited before..
   (let ((visited-exists (get-meta :visited *player*)))
     (unless (and visited-exists (member "rat-basement" visited-exists))

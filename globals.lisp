@@ -32,12 +32,15 @@
 (defparameter *default-message-textarea-window*
   (list 0
         0
-        *screen-width*
+        (- *screen-width* 150)
         *screen-height*))
 
 (defparameter *draw-textarea-window* nil)
 (defparameter *draw-message-exclamation* nil)
 (defparameter *seconds-to-remove-message-notification* 3)
+
+(defparameter *health-placement* `(,(- *screen-width* 250) ,(+ 32 16)))
+(defparameter *seconds-for-health-flash* 3)
 
 ;; (defparameter *default-message-textarea-window*
 ;;   (list 0
@@ -52,6 +55,12 @@
 (defparameter *primary-font-name* sdl:*font-7x13*)
 (defparameter *primary-font-width* 7)
 (defparameter *primary-font-height* 13)
+
+(defparameter *larger-font* nil)
+(defparameter *larger-font-name* sdl:*font-9x15*)
+(defparameter *larger-font-width* 9)
+(defparameter *larger-font-height* 15)
+
 
 ;; light and LOS
 

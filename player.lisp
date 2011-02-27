@@ -4,7 +4,8 @@
                                       :name "player"
                                       :x 1
                                       :y 1
-                                      :hp 10
+                                      :hp 25
+                                      :hp-max 25
                                       :att-r '(1 5)
                                       :dmg-r '(1 4)
                                       :def-r '(1 5)))
@@ -17,16 +18,34 @@
         (+ min (* r diff)))))
 
 (defun hit (actor1 actor2 dmg)
-  (assert (eq actor1 *player*))
-  (let ((dmg-txt (format nil "~d" (round dmg))))
-    (cond ((> dmg 0)
-           (textarea-log `("hit " (:color "00ff00") ,(name (mon-type actor2)) (:color "ffffff") " for " (:color "0000ff") 
+  (cond ((eq actor1 *player*)
+         ;; player attacking mob
+         (let ((dmg-txt (format nil "~d" (round dmg))))
+           (cond ((> dmg 0)
+                  (textarea-log `("hit " (:color "00ff00") 
+                                         ,(name (mon-type actor2)) (:color "ffffff") " for " (:color "0000ff") 
+                                         ,dmg-txt
+                                         (:color "ffffff") " damage"))
+                  (add-damage-hover actor2 dmg-txt "0000ff")
+                  (decf (hp actor2) dmg))
+                 (t (textarea-log `((:color "ff0000") "missed "
+                                    (:color "00ff00") ,(name (mon-type actor2))))
+                    (add-damage-hover actor2 "missed" "00007f")))))
+        ((eq actor2 *player*)
+         ;; mob attacking player
+         (let ((dmg-txt (format nil "~d" (round dmg))))
+           (cond ((> dmg 0)
+                  (textarea-log `((:color "00ff00") ,(name (mon-type actor1)) (:color "ffffff") " hits you for "
+                                  (:color "ff0000") 
                                   ,dmg-txt
                                   (:color "ffffff") " damage"))
-           (add-damage-hover actor2 dmg-txt)
-           (decf (hp actor2) dmg))
-          (t (textarea-log `((:color "ff0000") "missed " (:color "00ff00") ,(name (mon-type actor2))))
-             (add-damage-hover actor2 "missed")))))
+                  (add-damage-hover actor2 dmg-txt "ff0000")
+                  (decf (hp actor2) dmg)
+                  (flash-hp))
+                 (t (textarea-log `((:color "00ff00") ,(name (mon-type actor1))
+                                    (:color "ffffff") " misses you"))
+                    (add-damage-hover actor2 "missed" "7f0000")))))))
+         
   
 (defun attack (actor1 actor2)
   (destructuring-bind (attmin attmax) (att-r actor1)
@@ -40,3 +59,39 @@
 (defun draw-player ()  
   (multiple-value-bind (x y) (get-screen-pos-of *player*)
     (sdl:draw-surface-at-* (get-image "player-front") x y)))
+
+(make-object
+ :name "health renderer"
+ :render-level "textarea"
+ :render-cb #'(lambda (obj)
+                (when (or *draw-textarea-window* (get-meta :visible obj))
+                  (sdl:draw-string-solid-* "HP:"
+                                           (first *health-placement*)
+                                           (second *health-placement*)
+                                           :color (sdl:color :r #xff :g 0 :b 0)
+                                           :font *larger-font*)
+                  (let* ((start (+ (* 4 *larger-font-width*) (first *health-placement*)))
+                         (width (- *screen-width* start 15)))
+                    (sdl:draw-box-* start
+                                    (second *health-placement*)
+                                    width
+                                    *larger-font-height*
+                                    :color (sdl:color :r #x5f :g 0 :b 0))
+                    (sdl:draw-box-* start
+                                    (second *health-placement*)
+                                    (max (floor (* width (/ (hp *player*) (hp-max *player*)))) 0)
+                                    *larger-font-height*
+                                    :color (sdl:color :r #xff :g 0 :b 0))))))
+
+(make-object
+ :name "hp enabler"
+ :update-cb #'(lambda (obj)
+                (declare (ignore obj))
+                (set-meta (:visible (lookup-by-name "health renderer")) nil))
+ :update-cb-control :none)
+
+
+(defun flash-hp ()
+  (set-meta (:visible (lookup-by-name "health renderer")) t)
+  (setf (update-cb-control (lookup-by-name "hp enabler"))
+        `(:seconds ,*seconds-for-health-flash*)))

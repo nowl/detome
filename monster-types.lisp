@@ -21,10 +21,11 @@
 (defgeneric random-walk-movement (obj)
   (:method ((obj actor))
     (turn-helper 2 1
-      (let ((x (- (random 3) 1))
-            (y (- (random 3) 1)))
-        (attempt-move-monster obj x y)))))
-        
+      (if (<= (distance *player* obj) 1)
+          (attack obj *player*)
+          (let ((x (- (random 3) 1))
+                (y (- (random 3) 1)))
+            (attempt-move-monster obj x y))))))
 
 (defgeneric distance (src dest)
   (:method ((src actor) (dest actor))
@@ -33,20 +34,21 @@
 
 (defun random-walk-movement-with-chase (obj)
   (turn-helper 2 1
-    (if (< (distance *player* obj) 10)
-        ;; TODO should use astar routine here
-        (let ((x (cond ((< (x *player*) (x obj)) -1)
-                       ((> (x *player*) (x obj)) 1)
-                       (t 0)))
-              (y (cond ((< (y *player*) (y obj)) -1)
-                       ((> (y *player*) (y obj)) 1)
-                       (t 0))))
-          (textarea-log `("The " (:color "ff0000") ,(name (mon-type obj)) (:color "ffffff") " yells, \"You won't escape!\""))
-          (attempt-move-monster obj x y))
-        (let ((x (- (random 3) 1))
-              (y (- (random 3) 1)))
-          (attempt-move-monster obj x y)))))
-  
+    (cond ((<= (distance *player* obj) 2)
+           (attack obj *player*))
+          ((< (distance *player* obj) 10)
+           ;; TODO should use astar routine here
+           (let ((x (cond ((< (x *player*) (x obj)) -1)
+                          ((> (x *player*) (x obj)) 1)
+                          (t 0)))
+                 (y (cond ((< (y *player*) (y obj)) -1)
+                          ((> (y *player*) (y obj)) 1)
+                          (t 0))))
+             (textarea-log `("The " (:color "ff0000") ,(name (mon-type obj)) (:color "ffffff") " yells, \"You won't escape!\""))
+             (attempt-move-monster obj x y))
+           (let ((x (- (random 3) 1))
+                 (y (- (random 3) 1)))
+             (attempt-move-monster obj x y))))))  
   
 
 (define-monster-type

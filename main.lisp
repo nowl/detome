@@ -34,6 +34,7 @@
  :update-cb #'(lambda (obj)
                 (declare (ignore obj))
                 (setf *primary-font* (sdl:initialise-default-font *primary-font-name*))
+                (setf *larger-font* (sdl:initialise-default-font *larger-font-name*))
                 (sdl:enable-alpha t :surface sdl:*default-display*)
                 (sdl:enable-alpha t :surface sdl:*default-surface*)
                 (sdl:enable-key-repeat 500 50)
