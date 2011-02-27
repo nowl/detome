@@ -19,7 +19,6 @@
    (:file "player")
    (:file "dungeon")
    (:file "monster")
-   (:file "message-game-state")
    (:file "textarea")
    (:file "events")
    (:file "maps")

@@ -1,6 +1,7 @@
 (in-package #:detome)
 
 (defun define-images ()
+  (define-image "message-exclamation" "data/tileset.png" `(1 ,(1+ (* 3 33)) 32 32))
   (define-image "plain" "data/tileset.png" '(1 1 32 32))
   (define-image "tree" "data/tileset.png" '(100 1 32 32))
   (define-image "wall" "data/tileset.png" '(34 1 32 32))

@@ -21,9 +21,10 @@
  :render-level "textarea"
  :render-cb #'(lambda (obj)
                 (declare (ignore obj))
-                (draw-message-textarea *message-area-strings*)))
+                (when *draw-textarea-window*
+                  (draw-message-textarea *message-area-strings*))))
 
-(add (lookup-by-name "textarea renderer") *message-game-state*)
+;;(add (lookup-by-name "textarea renderer") *message-game-state*)
 
 ;; This is a one-shot updater that sets up some various sdl-specific
 ;; things that are required after sdl-init and also serves to
@@ -43,7 +44,8 @@
                 (set-render-order '("background"
                                     "items"
                                     "base"
-                                    "textarea"))
+                                    "textarea"
+                                    "notifications"))
                 (build-rat-basement))
  
  :update-cb-control :one-shot)

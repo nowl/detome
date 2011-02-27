@@ -28,6 +28,11 @@
             (update obj))))
 
 (defmethod add ((obj object) (manager object-manager))
+  ;; attempt to remove the old before adding the new
+  (let ((obj (gethash (name obj) (object-name-lookup manager))))
+    (when obj
+      (remove obj manager)))
+
   ;; add to the name hashtable
   (with-slots (object-name-lookup object-layers render-order) manager
     (with-slots (name) obj

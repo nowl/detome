@@ -1,6 +1,6 @@
 (in-package #:detome)
 
-(defparameter *map-window* '(0 0 32 22)
+(defparameter *map-window* '(0 0 32 24)
   "The viewport of the map on the screen in terms of tiles. The
   ordering goes x and y location of the upper left corner of the map
   then width and height follow.")
@@ -18,7 +18,7 @@
   "The space to leave between each separate line.")
 (defparameter *message-textarea-height-offset-between-messages* 5
   "The space to leave between each separate message.")
-(defparameter *default-message-ttl-sec* 10
+(defparameter *default-message-ttl-sec* 15
   "The default time to live for a message if a time is not provided.")
 
 
@@ -31,10 +31,20 @@
 
 (defparameter *default-message-textarea-window*
   (list 0
-        (* 32 (nth 3 *map-window*))
+        0
         *screen-width*
-        (- *screen-height* (* 32 (nth 3 *map-window*))))
-  "This defines the rightmost region of the screen where text messages may appear.")
+        *screen-height*))
+
+(defparameter *draw-textarea-window* nil)
+(defparameter *draw-message-exclamation* nil)
+(defparameter *seconds-to-remove-message-notification* 3)
+
+;; (defparameter *default-message-textarea-window*
+;;   (list 0
+;;         (* 32 (nth 3 *map-window*))
+;;         *screen-width*
+;;         (- *screen-height* (* 32 (nth 3 *map-window*))))
+;;   "This defines the rightmost region of the screen where text messages may appear.")
 
 ;; fonts
 

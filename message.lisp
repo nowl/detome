@@ -10,7 +10,7 @@
     (sdl:color :r red :g green :b blue)))
 
 (defun update-message-strings (update-freq formatted-buffer &key rawtext 
-			       (message-textarea-window *default-message-textarea-window*))
+                               (message-textarea-window *default-message-textarea-window*))
   "Takes some rawtext and outputs a valid string buffer for use with
   the string renderer and also a valid formatted-buffer for use with
   subsequent calls to update-message-strings.
@@ -42,7 +42,7 @@
     passed back into this function on subsequent calls.
   "
   (declare (single-float update-freq)
-	   (list formatted-buffer rawtext message-textarea-window))
+           (list formatted-buffer rawtext message-textarea-window))
 
   ;; parse out controls and full raw string
   (let (raw-strings controls ttls)
