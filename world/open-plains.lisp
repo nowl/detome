@@ -19,7 +19,6 @@
                   (declare (ignore obj))
                   (when (> (random 1.0) 0.75)
                     (let (x y)
-                      (textarea-log '("test"))
                       (ecase (random 4)
                         (0 (setf x (+ (x *player*) 20)
                                  y (+ (y *player*) (random 30) -15)))

@@ -116,10 +116,14 @@
 (make-object
  :name "monster garbage collector"
  :update-cb #'(lambda (obj)
+                (declare (ignore obj))
                 (dolist (mon *monsters-in-level*)
                   (when (<= (hp mon) 0)
-                    (remove-monster mon)
-                    (textarea-log `((:color "00ff00") ,(name (mon-type mon)) (:color "ffffff") " dies!"))))))
+                    (let ((drop (drop-item mon)))
+                      (remove-monster mon)                    
+                      (textarea-log `((:color "00ff00") ,(name (mon-type mon)) (:color "ffffff") " dies!"))
+                      (when drop
+                        (textarea-log `(,(name (mon-type mon)) " drops a " ,drop))))))))
 
 (defun actor-not-at (x y)
   ;; test other monsters

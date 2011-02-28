@@ -43,8 +43,8 @@
                 ;;(clear-explored-map)
                 ;;(populate-monsters)
                 (set-render-order '("background"
-                                    "items"
                                     "base"
+                                    "items"
                                     "textarea"
                                     "notifications"))
                 ;(build-rat-basement))

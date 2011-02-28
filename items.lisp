@@ -100,11 +100,19 @@
                 1
                 #'(lambda (spawner)
                     (if (and (consp spawner)
-                             (eq (first spawner) :monster))
+                             (eq (first spawner) :mob))
                         (let ((mon-type (name (mon-type (second spawner)))))
-                          (cond ((equal mon-type "rat") 0.5)
-                                ((equal mon-type "giant rat") 1.0)
+                          (cond ((string-equal mon-type "rat") 0.5)
+                                ((string-equal mon-type "giant rat") 1.0)
                                 (t 0.0)))
-                      0.0)))
- 
-                
+                        0.0)))
+
+;; XXX: currently this runs sequentially through the *item-types* and
+;; should be more random
+(defun drop-item (mob)
+  (loop for item-type being the hash-values of *item-types* do
+       (when (and (<= (level item-type) (level mob))
+                  (<= (random 1.0) (funcall (rarity item-type) `(:mob ,mob))))
+         ;;(place-item (name item-type) (x mob) (y mob))
+         (return-from drop-item (name item-type)))))
+         
