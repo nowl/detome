@@ -1,10 +1,10 @@
 (in-package #:detome)
 
 (defun build-rat-basement ()
-  (clear-intensity-map)
+  ;(clear-intensity-map)
   (clear-monsters-from-level)
 
-  (set-level
+  (set-predefined-level
    ((6 6 6 6 6 6 6 6 6 6 6 6 6 5 5 5 5 5 5 5 5 5 5 5 6 5 6 6 6 6 6 6)
     (6 5 5 5 5 5 5 5 5 5 5 6 6 5 5 5 5 5 5 5 5 5 5 5 5 5 6 6 5 5 5 6)
     (6 5 5 5 5 5 6 5 5 5 5 6 6 5 5 5 5 5 5 5 5 5 5 5 5 5 6 6 5 5 5 6)
@@ -57,4 +57,5 @@
       (textarea-log '("You awaken to rats. You have no recollection of how you got here but your head is aching."))
       (set-meta (:visited *player*)
                 (append visited-exists '("rat-basement")))
-      (clear-explored-map))))
+      ;(clear-explored-map))))
+      )))

@@ -26,7 +26,8 @@
    (:file "world-macros")
    (:module "world"
             :components
-            ((:file "rat-basement"))
+            ((:file "rat-basement")
+             (:file "open-plains"))
             :serial t)
    (:file "main"))
   :serial t)

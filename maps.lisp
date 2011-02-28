@@ -1,6 +1,7 @@
 (in-package #:detome)
 
 (defparameter *level* nil)
+(defparameter *level-type* nil)
 (defparameter *level-width* nil)
 (defparameter *level-height* nil)
 (defparameter *intensity-map* nil)
@@ -8,11 +9,10 @@
 
 ;; Searches all map-cells at the specified location on the map for the
 ;; map-cell with the largest light attenuation.
-(defun attenuation-lookup (x y map)
-  (let* ((map-points (aref map y x))
-         (atts (mapcar #'(lambda (point)
-                           (map-cell-attenuation (gethash point *map-cells-by-number*)))
-                       map-points)))
+(defun attenuation-lookup (map-cells)
+  (let ((atts (mapcar #'(lambda (point)
+                          (map-cell-attenuation (gethash point *map-cells-by-number*)))
+                      map-cells)))
     (apply #'max (mapcar #'(lambda (att)
                              (etypecase att
                                (float att)
@@ -47,13 +47,25 @@
 (make-map-functions *explored-map* explored-map)
 (make-map-functions *intensity-map* intensity-map)
 
+(defun get-map-points (x y)
+  (ecase *level-type*
+    (:predefined
+     (aref *level* y x))
+    (:perlin
+     (funcall *level* x y))))
+
 (defun update-intensity-map (x y intensity)
   (clear-intensity-map)
   (set-in-intensity-map x y intensity)
   (let ((sights (line-of-sight x y
-                               *level-width*
-                               *level-height*
-                               #'(lambda (x y) (funcall #'detome::attenuation-lookup x y detome::*level*)) 
+                               (ecase *level-type*
+                                 (:predefined *level-width*)
+                                 (:perlin (+ x 100)))
+                               (ecase *level-type*
+                                 (:predefined *level-height*)
+                                 (:perlin (+ y 100)))
+                               #'(lambda (x y)
+                                   (attenuation-lookup (get-map-points x y)))
                                *light-intensity-cutoff*)))
     (loop for sight in sights do
          (destructuring-bind (x y rel-intensity) sight
@@ -73,9 +85,8 @@
 
 (defun image-from-maps (x y)
   (let ((darken-amount (darken-amount-at-point x y)))
-    (let* ((map-points (aref *level* y x))
-           (images (mapcar #'(lambda (mp) (map-cell-image (gethash mp *map-cells-by-number*)))
-                           map-points)))
+    (let ((images (mapcar #'(lambda (mp) (map-cell-image (gethash mp *map-cells-by-number*)))
+                          (get-map-points x y))))
       (loop for image in images collecting
            (get-image image :darken darken-amount)))))
 
@@ -90,17 +101,31 @@
 
 
 (defun draw-background ()
-  (loop for x from (max (first *map-window*) 0) below (min *level-width*
-                                                           (+ (third *map-window*)
-                                                              (first *map-window*))) do
-       (loop for y from (max (second *map-window*) 0) below (min *level-height*
-                                                                 (+ (fourth *map-window*)
-                                                                    (second *map-window*))) do
-            (let ((images (image-from-maps x y)))
-              (loop for image in images do
-                   (sdl:draw-surface-at-* image
-                                          (* (- x (first *map-window*)) 32)
-                                          (* (- y (second *map-window*)) 32)))))))
+  (let ((x-start (ecase *level-type*
+                   (:predefined (max (first *map-window*) 0))
+                   (:perlin (first *map-window*))))
+        (y-start (ecase *level-type*
+                   (:predefined (max (second *map-window*) 0))
+                   (:perlin (second *map-window*))))
+        (x-extent (ecase *level-type*
+                    (:predefined (min *level-width*
+                                      (+ (third *map-window*)
+                                         (first *map-window*))))
+                    (:perlin (+ (third *map-window*)
+                                (first *map-window*)))))
+        (y-extent (ecase *level-type*
+                    (:predefined (min *level-height*
+                                      (+ (fourth *map-window*)
+                                         (second *map-window*))))
+                    (:perlin (+ (fourth *map-window*)
+                                (second *map-window*))))))
+    (loop for x from x-start below x-extent do
+         (loop for y from y-start below y-extent do
+              (let ((images (image-from-maps x y)))
+                (loop for image in images do
+                     (sdl:draw-surface-at-* image
+                                            (* (- x (first *map-window*)) 32)
+                                            (* (- y (second *map-window*)) 32))))))))
 
 (defun scenery-renderer (obj)
   (let ((image (get-meta :image obj))
@@ -112,14 +137,15 @@
 
 ;; determines if a specific spot on the map is walkable by the player
 (defun walkable (x y)
-  (unless (and (>= x 0) (>= y 0) (< x *level-width*) (< y *level-height*))
+  (unless (or (eq *level-type* :perlin)
+              (and (eq *level-type* :predefined)
+                   (>= x 0) (>= y 0) (< x *level-width*) (< y *level-height*)))
     (return-from walkable (values nil :world-extents)))
   (unless (actor-not-at x y)
     (return-from walkable (values nil :actor)))
-  (let* ((map-point (aref *level* y x)))
-    (loop for cell in map-point do
-         (unless (map-cell-walkable (gethash cell *map-cells-by-number*))
-           (return-from walkable (values nil :scenery)))))
+  (loop for cell in (get-map-points x y) do
+       (unless (map-cell-walkable (gethash cell *map-cells-by-number*))
+         (return-from walkable (values nil :scenery))))
   t)
 
 (make-object

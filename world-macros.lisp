@@ -1,11 +1,12 @@
 (in-package #:detome)
 
-(defmacro set-level (map)
+(defmacro set-predefined-level (map)
   (let ((h (length map))
         (w (length (car map))))
     (with-gensyms (i j)
       `(progn
-         (setf *level-width* ,w
+         (setf *level-type* :predefined
+               *level-width* ,w
                *level-height* ,h
                *level* (make-array '(,h ,w)))
          (loop for ,i below ,h do
@@ -14,6 +15,15 @@
                          (list (nth ,j (nth ,i ',map))))))
          (clear-intensity-map)
          (clear-explored-map)))))
+
+(defmacro set-perlin-level (func)
+  `(progn
+     (setf *level-type* :perlin
+           *level-width* nil
+           *level-height* nil
+           *level* ,func)
+     (clear-intensity-map)
+     (clear-explored-map)))
 
 (defmacro place-monster (name x y)
   (with-gensyms (mt)
