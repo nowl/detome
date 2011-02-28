@@ -67,13 +67,29 @@
 (defparameter *light-intensity-cutoff* 0.1
   "The intensity under which LOS is assumed to be zero.")
 
-;; weather related
+;; environment related
 
-(defparameter *day-night-cycle-in-seconds* 30
+(defparameter *day-night-cycle-in-seconds* (* 60 10)
   "The number of seconds of real game time that daytime and nighttime lasts.")
 
 (defparameter *environment* :outside)
 (defparameter *weather* :clear)
+(defparameter *atmosphere* :day)
+
+;; these have additive effects on the light attenuation
+(defparameter *weather-attens*
+  '(:clear 0
+    :drizzle 0.1
+    :light-rain 0.2
+    :heavy-rain 0.4
+    :storming 0.5
+    :light-snow 0.6
+    :heavy-snow 0.7
+    :sand-storm 0.9))
+
+(defparameter *atmosphere-attens*
+  '(:day 0
+    :night 0.7))
 
 ;; logging
 

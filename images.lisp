@@ -12,4 +12,7 @@
   (define-image "dirty-cement-floor" "data/tileset.png" '(133 1 32 32))
   (define-image "rock-wall" "data/tileset.png" '(166 1 32 32))
   (define-image "dust-1" "data/tileset.png" `(,(1+ (* 6 33)) 1 32 32))
-  (define-image "dust-2" "data/tileset.png" `(,(1+ (* 7 33)) 1 32 32)))
+  (define-image "dust-2" "data/tileset.png" `(,(1+ (* 7 33)) 1 32 32))
+
+  ;; items
+  (define-image "rat chunk" "data/tileset.png" `(,(1+ (* 2 33)) 1 32 32)))

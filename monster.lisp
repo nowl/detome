@@ -114,12 +114,12 @@
   (remove monster *play-game-state*))
 
 (make-object
-    :name "monster garbage collector"
-  :update-cb #'(lambda (obj)
-                 (dolist (mon *monsters-in-level*)
-                   (when (<= (hp mon) 0)
-                     (remove-monster mon)
-                     (textarea-log `((:color "00ff00") ,(name (mon-type mon)) (:color "ffffff") " dies!"))))))
+ :name "monster garbage collector"
+ :update-cb #'(lambda (obj)
+                (dolist (mon *monsters-in-level*)
+                  (when (<= (hp mon) 0)
+                    (remove-monster mon)
+                    (textarea-log `((:color "00ff00") ,(name (mon-type mon)) (:color "ffffff") " dies!"))))))
 
 (defun actor-not-at (x y)
   ;; test other monsters

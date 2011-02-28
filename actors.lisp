@@ -1,13 +1,15 @@
 (in-package #:detome)
 
-(defclass actor (object)
+(defclass map-object (object)
   ((x 
     :initarg :x :accessor x :type fixnum :documentation 
     "The x position of the actor on the map.")
    (y 
     :initarg :y :accessor y :type fixnum :documentation 
-    "The y position of the actor on the map.")
-   (level
+    "The y position of the actor on the map.")))
+
+(defclass actor (map-object)
+  ((level
     :initarg :level :accessor level :type fixnum :documentation 
     "The actor's level.")
    (hp

@@ -42,6 +42,11 @@
                             :update-cb-control '(:turns 0)) 
              *monsters-in-level*))))
 
+(defmacro place-random-monster (min-level max-level x y)
+  (with-gensyms (mon)
+    `(let ((,mon (get-random-monster ,x ,y ,min-level ,max-level)))
+       (push ,mon *monsters-in-level*))))
+       
 (defmacro make-scenery (image x y)
   (with-gensyms (obj)
     `(let ((,obj (make-object :name (symbol-name (gensym ,image)))))

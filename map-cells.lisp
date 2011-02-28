@@ -23,7 +23,7 @@
 
 (define-map-cell 0
     "plain"
-  :attenuation '(0.1 :dark 0.6)
+  :attenuation 0.1
   :walkable t
   :image "plain")
 (define-map-cell 1
@@ -33,12 +33,12 @@
   :image "wall")
 (define-map-cell 2
     "mountain"
-  :attenuation '(0.75 :dark 0.9)
+  :attenuation 0.75
   :walkable t
   :image "mountain")
 (define-map-cell 5
     "dirty-cement-floor"
-  :attenuation '(0.1 :dark 0.6)
+  :attenuation 0.1
   :walkable t
   :image "dirty-cement-floor")
 (define-map-cell 6
@@ -48,16 +48,16 @@
   :image "rock-wall")
 (define-map-cell 8
   "tree"
-  :attenuation '(0.1 :dark 0.6)
+  :attenuation 0.1
   :walkable t
   :image "tree")
 (define-map-cell 9
   "dust-1"
-  :attenuation '(0.1 :dark 0.6)
+  :attenuation 0.1
   :walkable t
   :image "dust-1")
 (define-map-cell 10
   "dust-2"
-  :attenuation '(0.1 :dark 0.6)
+  :attenuation 0.1
   :walkable t
   :image "dust-2")

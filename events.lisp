@@ -96,44 +96,5 @@
              #.(gen-move-command :sdl-key-kp1 -1 1)
              ((sdl:key= key :sdl-key-space)
               (setf *draw-textarea-window* (not *draw-textarea-window*)
-                    *draw-message-exclamation* nil))
-             ((sdl:key= key :sdl-key-r)
-              (make-and-send-message
-               :sender "event processor" :receiver "global message receiver"
-               :action #'(lambda (sender receiver)
-                           (declare (ignore sender receiver))
-                           (let (start-pos)
-                             (setf *level* (array-map (generate-dungeon (array-dimension *level* 0)
-                                                                        (array-dimension *level* 1)
-                                                                        100)
-                                                      #'(lambda (tile i j)
-                                                          (map-cell-number
-                                                           (gethash
-                                                            (case tile
-                                                              (:wall "wall")
-                                                              (:floor (when (null start-pos)
-                                                                        (setf start-pos (list i j)))
-                                                                      "plain")
-                                                              (:hallway "plain")
-                                                              (otherwise "wall"))
-                                                            *map-cells-by-name*)))))
-                             (setf (x *player*) (second start-pos)
-                                   (y *player*) (first start-pos))
-                             (update-intensity-map (x *player*) (y *player*) 1.0))))
-              
-              t)
-             ((sdl:key= key :sdl-key-h)
-              (make-and-send-message 
-               :sender "event processor" :receiver "global message receiver"
-               :action #'(lambda (sender receiver type)
-                           (declare (ignore sender receiver type))
-                           (add-health-hover)))
-              t)
-             ((sdl:key= key :sdl-key-j)
-              (make-and-send-message
-               :sender "event processor" :receiver "global message receiver"
-               :action #'(lambda (sender receiver type)
-                           (declare (ignore sender receiver type))
-                           (add-damage-hover *player* -5)))
-              t))))
+                    *draw-message-exclamation* nil)))))
         (t nil))))

@@ -7,20 +7,20 @@
 (defparameter *intensity-map* nil)
 (defparameter *explored-map* nil)
 
+;; weather and atmosphere can make visibility much worse..
+(defun apply-weather (att)
+  (clip (+ att
+           (second (member *weather* *weather-attens*))
+           (second (member *atmosphere* *atmosphere-attens*)))
+        0.0 0.99))
+
 ;; Searches all map-cells at the specified location on the map for the
 ;; map-cell with the largest light attenuation.
 (defun attenuation-lookup (map-cells)
   (let ((atts (mapcar #'(lambda (point)
                           (map-cell-attenuation (gethash point *map-cells-by-number*)))
                       map-cells)))
-    (apply #'max (mapcar #'(lambda (att)
-                             (etypecase att
-                               (float att)
-                               (cons (let ((res (member *weather* att)))
-                                       (if res
-                                           (second res)
-                                           (first att))))))
-                         atts))))
+    (apply-weather (apply #'max atts))))
 
 ;; hashing explored-map and intensity-map over x and y coordinates,
 ;; this seems to work efficiently so far..
@@ -124,8 +124,8 @@
               (let ((images (image-from-maps x y)))
                 (loop for image in images do
                      (sdl:draw-surface-at-* image
-                                            (* (- x (first *map-window*)) 32)
-                                            (* (- y (second *map-window*)) 32))))))))
+                                            (* (- x x-start) 32)
+                                            (* (- y y-start) 32))))))))
 
 (defun scenery-renderer (obj)
   (let ((image (get-meta :image obj))
@@ -149,7 +149,7 @@
   t)
 
 (make-object
- :name "weather builder"
+ :name "environment builder"
  :update-cb #'(lambda (obj)
                 (declare (ignore obj))
                 (ecase *environment*
@@ -161,4 +161,5 @@
                                    (setf *weather* :clear)
                                    (textarea-log '("The shadows become slightly less threatening as night becomes day."))
                                    (update-intensity-map (x *player*) (y *player*) 1.0))))))
- :update-cb-control :none);; `(:seconds ,*day-night-cycle-in-seconds*))
+ :update-cb-control `(:seconds ,*day-night-cycle-in-seconds*))
+ ;;:update-cb-control :none);; `(:seconds ,*day-night-cycle-in-seconds*))
