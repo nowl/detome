@@ -95,7 +95,7 @@
    "Returns the screen position of the given object as x and y
     values"))
 
-(defmethod get-screen-pos-of ((obj actor))
+(defmethod get-screen-pos-of ((obj map-object))
   (values (* (- (x obj) (first *map-window*)) 32)
           (* (- (y obj) (second *map-window*)) 32)))
 
@@ -134,6 +134,16 @@
     (sdl:draw-surface-at-* (get-image image :darken (darken-amount-at-point x y))
                            (* (- x (first *map-window*)) 32)
                            (* (- y (second *map-window*)) 32))))
+
+
+(defun draw-items ()
+  (dolist (item *items-in-level*)
+    (multiple-value-bind (x y) (get-screen-pos-of item)
+      (let ((darken-amount (clip (- 1 (find-in-intensity-map (x item) (y item)))
+                                 0.0 1.0)))
+        (when (< darken-amount 1.0)
+          (sdl:draw-surface-at-* (get-image (image-name (item-type item)) :darken darken-amount) x y))))))
+
 
 ;; determines if a specific spot on the map is walkable by the player
 (defun walkable (x y)

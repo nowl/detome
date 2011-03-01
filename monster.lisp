@@ -24,7 +24,12 @@
        "The monster-type's defense rating generator.")
    (ai-cb
     :initarg :ai-cb :accessor ai-cb :type function :documentation
-    "The monster-type's ai callback.")))	  
+    "The monster-type's ai callback.")
+   (drops
+    :initarg :drops :accessor drops :type function
+    :documentation
+    "This function takes the current mob and returns a list of the
+    drop-names from this mob.")))
 
 (defclass monster (actor)
   ((mon-type :initarg :mon-type :accessor mon-type :type monster-type)
@@ -58,7 +63,7 @@
 
 (defparameter *monster-type-lookup* (make-hash-table :test 'equal))
 
-(defmacro define-monster-type (name image-name level hp-gen att-r-gen dmg-r-gen def-r-gen ai-cb)
+(defmacro define-monster-type (name image-name level hp-gen att-r-gen dmg-r-gen def-r-gen ai-cb drops)
   (let ((mt (gensym)))
     `(let ((,mt (make-instance 'monster-type
                                :name ,name
@@ -68,7 +73,8 @@
                                :att-r-gen ,att-r-gen
                                :dmg-r-gen ,dmg-r-gen
                                :def-r-gen ,def-r-gen
-                               :ai-cb ,ai-cb)))
+                               :ai-cb ,ai-cb
+                               :drops ,drops)))
        (setf (gethash ,name *monster-type-lookup*) ,mt)
        (setf *monster-types-by-level* (cl:remove ,name *monster-types-by-level* :key #'(lambda (x) (name (cadr x))) :test #'string=))
        (push (list ,level ,mt) *monster-types-by-level*)
@@ -119,11 +125,14 @@
                 (declare (ignore obj))
                 (dolist (mon *monsters-in-level*)
                   (when (<= (hp mon) 0)
-                    (let ((drop (drop-item mon)))
-                      (remove-monster mon)                    
+                    (let ((drops (funcall (drops (mon-type mon)) mon)))
+                      (remove-monster mon)
                       (textarea-log `((:color "00ff00") ,(name (mon-type mon)) (:color "ffffff") " dies!"))
-                      (when drop
-                        (textarea-log `(,(name (mon-type mon)) " drops a " ,drop))))))))
+                      (when drops
+                        (dolist (drop drops)
+                          (when drop
+                            (textarea-log `(,(name (mon-type mon)) " drops a " ,drop))
+                            (place-item drop `(:map ,(x mon) ,(y mon)))))))))))
 
 (defun actor-not-at (x y)
   ;; test other monsters

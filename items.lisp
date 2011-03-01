@@ -24,13 +24,7 @@
     :documentation
 	"The item-type's level meaning the minimum required level to use
     the item and also affects which monsters may spawn this
-    item-type.")
-   (rarity
-	:initarg :rarity :accessor rarity :type function
-    :documentation
-	"The rarity of the item-type determines how likely it is to
-	spawn. This function should return this likelihood when passed the
-	spawning mechanism: e.g., '(:monster <type>), :chest, etc.")))
+    item-type.")))
 
 (defclass item (map-object)
   ((location 
@@ -46,7 +40,8 @@
    (item-type
 	:initarg :item-type :accessor item-type :type item-type
     :documentation
-	"The type of this item.")))
+	"The type of this item."))
+  (:default-initargs :x 0 :y 0 :name "item"))
 
 ;; tie getting and setting x and y to the location slot
 
@@ -73,46 +68,14 @@
 (defparameter *item-types* (make-hash-table :test #'equal))
 (defparameter *items-in-level* nil)
 
-(defmacro make-item-type (name image-name type callback level rarity)
+(defmacro make-item-type (name image-name type callback level)
   `(setf (gethash ,name *item-types*)
          (make-instance 'item-type
                         :name ,name
                         :image-name ,image-name
                         :cls ,type
                         :cb ,callback
-                        :level ,level
-                        :rarity ,rarity)))
+                        :level ,level)))
 
 (defmacro get-item-type (name)
   `(gethash ,name *item-types*))
-
-(make-item-type "rat chunk"
-                "rat chunk"
-                :food
-                #'(lambda (obj owner)
-                    (when (eq owner *player*)
-                      (let ((hp-gain (random 5)))
-                        (incf (hp *player*) hp-gain)
-                        (textarea-log `("Although somewhat tough, the rat chunch provides you with "
-                                        (:color "00ff00") (string hp-gain) (:color "ffffff") " hp"))
-                        (flash-hp))
-                      (setf (inv *player*) (delete obj (inv *player*)))))
-                1
-                #'(lambda (spawner)
-                    (if (and (consp spawner)
-                             (eq (first spawner) :mob))
-                        (let ((mon-type (name (mon-type (second spawner)))))
-                          (cond ((string-equal mon-type "rat") 0.5)
-                                ((string-equal mon-type "giant rat") 1.0)
-                                (t 0.0)))
-                        0.0)))
-
-;; XXX: currently this runs sequentially through the *item-types* and
-;; should be more random
-(defun drop-item (mob)
-  (loop for item-type being the hash-values of *item-types* do
-       (when (and (<= (level item-type) (level mob))
-                  (<= (random 1.0) (funcall (rarity item-type) `(:mob ,mob))))
-         ;;(place-item (name item-type) (x mob) (y mob))
-         (return-from drop-item (name item-type)))))
-         

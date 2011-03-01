@@ -49,7 +49,15 @@
            (let ((x (- (random 3) 1))
                  (y (- (random 3) 1)))
              (attempt-move-monster obj x y))))))  
-  
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun make-drop-table-aux (val form)
+    `((<= ,val ,(second form)) ,(first form))))
+
+(defmacro make-drop-table (val alist)
+  `(cond ,@(loop for form in alist collect
+                 (make-drop-table-aux val form))
+         (t nil)))
 
 (define-monster-type
 	"rat"
@@ -63,7 +71,14 @@
       (list 1 (1+ (random 5))))
   #'(lambda ()
       (list 1 (1+ (random 5))))
-  #'random-walk-movement)
+  #'random-walk-movement
+  #'(lambda (mob)
+      (declare (ignore mob))
+      (list
+       (let ((val (random 1.0)))
+         (make-drop-table 
+          val
+          (("rat chunk" 0.5)))))))
 
 (define-monster-type
 	"giant rat"
@@ -79,4 +94,11 @@
       (list 1 (1+ (random 8))))
   ;;#'(lambda (obj)
   ;;    nil))
-  #'random-walk-movement-with-chase)
+  #'random-walk-movement-with-chase
+  #'(lambda (mob)
+      (declare (ignore mob))
+      (list
+       (let ((val (random 1.0)))
+         (make-drop-table
+          val
+          (("rat chunk" 1.0)))))))

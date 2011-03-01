@@ -18,12 +18,12 @@
    (:file "hovers")
    (:file "player")
    (:file "dungeon")
+   (:file "world-macros")
    (:file "monster")
    (:file "textarea")
    (:file "events")
    (:file "maps")
    (:file "monster-types")
-   (:file "world-macros")
    (:module "world"
             :components
             ((:file "rat-basement")

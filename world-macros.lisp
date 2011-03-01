@@ -42,13 +42,12 @@
                             :update-cb-control '(:turns 0)) 
              *monsters-in-level*))))
 
-(defmacro place-item (name x y)
+(defmacro place-item (name location)
   (with-gensyms (it)
     `(let ((,it (get-item-type ,name)))
        (push (make-instance 'item               
-                            :location `(:map ,,x ,,y)
-                            :item-type ,it
-                            :render-level "items")
+                            :location ,location
+                            :item-type ,it)
              *items-in-level*))))
 
 (defmacro place-random-monster (min-level max-level x y)

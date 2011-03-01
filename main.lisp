@@ -13,6 +13,7 @@
  :render-cb #'(lambda (obj)
                 (declare (ignore obj))
                 (draw-monsters)
+                (draw-items)
                 (draw-player)
                 (draw-hover-messages)))
 
@@ -44,7 +45,6 @@
                 ;;(populate-monsters)
                 (set-render-order '("background"
                                     "base"
-                                    "items"
                                     "textarea"
                                     "notifications"))
                 ;(build-rat-basement))

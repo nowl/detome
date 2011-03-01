@@ -15,4 +15,4 @@
   (define-image "dust-2" "data/tileset.png" `(,(1+ (* 7 33)) 1 32 32))
 
   ;; items
-  (define-image "rat chunk" "data/tileset.png" `(,(1+ (* 2 33)) 1 32 32)))
+  (define-image "rat chunk" "data/tileset.png" `(1 ,(1+ (* 4 33)) 32 32)))
