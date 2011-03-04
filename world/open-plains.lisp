@@ -2,6 +2,8 @@
 
 (defun build-open-plains ()
   (clear-monsters-from-level)
+  (clear-scenery-from-level)
+  (clear-items-from-level)
 
   (set-perlin-level
    #'(lambda (x y)
@@ -12,21 +14,7 @@
            (t '(0))))))
 
   (place-monster "rat" 10 10)
-
-  (make-item-type "rat chunk"
-                  "rat chunk"
-                  :food
-                  #'(lambda (obj owner)
-                      (when (eq owner *player*)
-                        (let ((hp-gain (random 5)))
-                          (incf (hp *player*) hp-gain)
-                          (textarea-log `("Although somewhat tough, the rat chunch provides you with "
-                                          (:color "00ff00") (string hp-gain) (:color "ffffff") " hp"))
-                          (flash-hp))
-                      (setf (inv *player*) (delete obj (inv *player*)))))
-                  1)
-
-
+  
   (make-object
    :name "plains monster creator"
    :update-cb #'(lambda (obj)
@@ -44,7 +32,7 @@
                                  y (- (y *player*) 20))))
                       (place-random-monster 0 4 x y))))
    :update-cb-control '(:turns 0))
-                  
+
   (place-player 1 1))
 
 (defun cleanup-open-plains ()

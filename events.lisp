@@ -94,6 +94,12 @@
              #.(gen-move-command :sdl-key-kp3 1 1)
              #.(gen-move-command :sdl-key-kp2 0 1)
              #.(gen-move-command :sdl-key-kp1 -1 1)
+             ((sdl:key= key :sdl-key-e)
+              (loop for item in *items-in-level* do
+                   (when (and (= (x item) (x *player*))
+                              (= (y item) (y *player*)))
+                     (funcall (cb (item-type item)) item *player*)
+                     (setf *items-in-level* (delete item *items-in-level*)))))
              ((sdl:key= key :sdl-key-space)
               (setf *draw-textarea-window* (not *draw-textarea-window*)
                     *draw-message-exclamation* nil)))))

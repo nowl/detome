@@ -18,7 +18,7 @@
   "The space to leave between each separate line.")
 (defparameter *message-textarea-height-offset-between-messages* 5
   "The space to leave between each separate message.")
-(defparameter *default-message-ttl-sec* 15
+(defparameter *default-message-ttl-sec* 5
   "The default time to live for a message if a time is not provided.")
 
 

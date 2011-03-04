@@ -7,6 +7,8 @@
 (defparameter *intensity-map* nil)
 (defparameter *explored-map* nil)
 
+(defparameter *scenery-in-level* nil)
+
 ;; weather and atmosphere can make visibility much worse..
 (defun apply-weather (att)
   (clip (+ att
@@ -121,20 +123,20 @@
                                 (second *map-window*))))))
     (loop for x from x-start below x-extent do
          (loop for y from y-start below y-extent do
-              (let ((images (image-from-maps x y)))
-                (loop for image in images do
-                     (sdl:draw-surface-at-* image
-                                            (* (- x x-start) 32)
-                                            (* (- y y-start) 32))))))))
+              (loop for image in (image-from-maps x y) do
+                   (sdl:draw-surface-at-* image
+                                          (* (- x x-start) 32)
+                                          (* (- y y-start) 32)))))))
 
-(defun scenery-renderer (obj)
-  (let ((image (get-meta :image obj))
-        (x (get-meta :x obj))
-        (y (get-meta :y obj)))
-    (sdl:draw-surface-at-* (get-image image :darken (darken-amount-at-point x y))
-                           (* (- x (first *map-window*)) 32)
-                           (* (- y (second *map-window*)) 32))))
+(defun clear-items-from-level ()
+  (dolist (item *items-in-level*)
+    (remove item *play-game-state*))
+  (setf *items-in-level* nil))
 
+(defun clear-scenery-from-level ()
+  (dolist (scenery *scenery-in-level*)
+    (remove scenery *play-game-state*))
+  (setf *scenery-in-level* nil))
 
 (defun draw-items ()
   (dolist (item *items-in-level*)

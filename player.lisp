@@ -6,7 +6,7 @@
                                       :y 1
                                       :hp 25
                                       :hp-max 25
-                                      :att-r '(1 5)
+                                      :att-r '(4 10)
                                       :dmg-r '(1 4)
                                       :def-r '(1 5)))
 

@@ -63,10 +63,12 @@
                      (list (map-cell-number (gethash ,image *map-cells-by-name*)))))
        (set-meta (:image ,obj) ,image)
        (set-meta (:x ,obj) ,x)
-       (set-meta (:y ,obj) ,y))))
+       (set-meta (:y ,obj) ,y)
+       (push ,obj *scenery-in-level*))))
 
 (defmacro place-player (x y)
   `(progn
      (setf (x *player*) ,x
            (y *player*) ,y)
-     (update-intensity-map ,x ,y 1.0)))
+     (update-intensity-map ,x ,y 1.0)
+     (move-map-window-if-needed)))

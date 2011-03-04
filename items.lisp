@@ -79,3 +79,27 @@
 
 (defmacro get-item-type (name)
   `(gethash ,name *item-types*))
+
+(make-item-type "rat chunk"
+                  "rat chunk"
+                  :food
+                  #'(lambda (obj owner)
+                      (when (eq owner *player*)
+                        (let ((hp-gain (rand 10 5)))
+                          (incf (hp *player*) hp-gain)
+                          (textarea-log `("Although somewhat tough, the rat chunch provides you with "
+                                          (:color "00ff00") ,(format nil "~d" hp-gain) (:color "ffffff") " hp"))
+                          (flash-hp))
+                        (setf (inv *player*) (delete obj (inv *player*)))))
+                  1)
+  
+  (make-item-type "attack powerup"
+                  "attack powerup"
+                  :food
+                  #'(lambda (obj owner)
+                      (when (eq owner *player*)
+                        (destructuring-bind (attmin attmax) (att-r *player*)
+                          (setf (att-r *player*) (list (1+ attmin) (1+ attmax))))
+                        (textarea-log `("You feel stronger!"))
+                        (setf (inv *player*) (delete obj (inv *player*)))))
+                  1)

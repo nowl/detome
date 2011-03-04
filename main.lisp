@@ -25,6 +25,13 @@
                 (when *draw-textarea-window*
                   (draw-message-textarea *message-area-strings*))))
 
+(make-object
+ :name "player death detector"
+ :update-cb #'(lambda (obj)
+                (declare (ignore obj))
+                (when (<= (hp *player*) 0)
+                  (build-open-plains))))
+
 ;;(add (lookup-by-name "textarea renderer") *message-game-state*)
 
 ;; This is a one-shot updater that sets up some various sdl-specific
@@ -47,7 +54,7 @@
                                     "base"
                                     "textarea"
                                     "notifications"))
-                ;(build-rat-basement))
+                ;;(build-rat-basement))
                 (build-open-plains))
  
  :update-cb-control :one-shot)

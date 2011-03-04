@@ -78,7 +78,7 @@
        (let ((val (random 1.0)))
          (make-drop-table 
           val
-          (("rat chunk" 0.5)))))))
+          (("attack powerup" 0.2) ("rat chunk" 0.5)))))))
 
 (define-monster-type
 	"giant rat"
@@ -101,4 +101,4 @@
        (let ((val (random 1.0)))
          (make-drop-table
           val
-          (("rat chunk" 1.0)))))))
+          (("attack powerup" 0.5) ("rat chunk" 1.0)))))))

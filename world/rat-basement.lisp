@@ -3,6 +3,8 @@
 (defun build-rat-basement ()
   ;(clear-intensity-map)
   (clear-monsters-from-level)
+  (clear-scenery-from-level)
+  (clear-items-from-level)
 
   (set-predefined-level
    ((6 6 6 6 6 6 6 6 6 6 6 6 6 5 5 5 5 5 5 5 5 5 5 5 6 5 6 6 6 6 6 6)
