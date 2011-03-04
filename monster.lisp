@@ -48,7 +48,7 @@
                  :def-r (funcall (def-r-gen type))
                  :update-cb (ai-cb type)
                  :update-cb-control '(:turns 0)))
-
+  
 (defun get-random-monster (x y min-level max-level)
   (let ((min-pos (position-if #'(lambda (x) (>= x min-level)) *monster-types-by-level* :key #'car))
         (max-pos (position-if #'(lambda (x) (<= x max-level)) *monster-types-by-level* :from-end t :key #'car)))

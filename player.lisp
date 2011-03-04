@@ -1,14 +1,16 @@
 (in-package #:detome)
 
-(defparameter *player* (make-instance 'player
-                                      :name "player"
-                                      :x 1
-                                      :y 1
-                                      :hp 25
-                                      :hp-max 25
-                                      :att-r '(4 10)
-                                      :dmg-r '(1 4)
-                                      :def-r '(1 5)))
+(defparameter *player* nil)
+(defun reset-player ()
+  (setf *player* (make-instance 'player
+                                :name "player"
+                                :x 1
+                                :y 1
+                                :hp 25
+                                :hp-max 25
+                                :att-r '(4 10)
+                                :dmg-r '(1 4)
+                                :def-r '(1 5))))
 
 (defun rand (max &optional (min 0))
   (let ((diff (- max min))

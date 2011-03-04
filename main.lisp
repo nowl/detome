@@ -30,7 +30,8 @@
  :update-cb #'(lambda (obj)
                 (declare (ignore obj))
                 (when (<= (hp *player*) 0)
-                  (build-open-plains))))
+                  (reset-player)
+                  (build-rat-basement))))
 
 ;;(add (lookup-by-name "textarea renderer") *message-game-state*)
 
@@ -47,6 +48,7 @@
                 (sdl:enable-alpha t :surface sdl:*default-surface*)
                 (sdl:enable-key-repeat 500 50)
                 (define-images)
+                (reset-player)
                 ;;(update-intensity-map (x *player*) (y *player*) 1.0)
                 ;;(clear-explored-map)
                 ;;(populate-monsters)
@@ -54,8 +56,8 @@
                                     "base"
                                     "textarea"
                                     "notifications"))
-                ;;(build-rat-basement))
-                (build-open-plains))
+                (build-rat-basement))
+                ;;(build-open-plains))
  
  :update-cb-control :one-shot)
 

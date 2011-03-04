@@ -93,13 +93,13 @@
                         (setf (inv *player*) (delete obj (inv *player*)))))
                   1)
   
-  (make-item-type "attack powerup"
-                  "attack powerup"
-                  :food
-                  #'(lambda (obj owner)
-                      (when (eq owner *player*)
-                        (destructuring-bind (attmin attmax) (att-r *player*)
-                          (setf (att-r *player*) (list (1+ attmin) (1+ attmax))))
+(make-item-type "attack powerup"
+                "attack powerup"
+                :food
+                #'(lambda (obj owner)
+                    (when (eq owner *player*)
+                      (destructuring-bind (attmin attmax) (att-r *player*)
+                        (setf (att-r *player*) (list (1+ attmin) (1+ attmax))))
                         (textarea-log `("You feel stronger!"))
                         (setf (inv *player*) (delete obj (inv *player*)))))
-                  1)
+                1)
