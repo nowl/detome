@@ -19,10 +19,12 @@
 ;; Searches all map-cells at the specified location on the map for the
 ;; map-cell with the largest light attenuation.
 (defun attenuation-lookup (map-cells)
-  (let ((atts (mapcar #'(lambda (point)
-                          (map-cell-attenuation (gethash point *map-cells-by-number*)))
-                      map-cells)))
-    (apply-weather (apply #'max atts))))
+  (if (null map-cells)
+      nil
+      (let ((atts (mapcar #'(lambda (point)
+                              (map-cell-attenuation (gethash point *map-cells-by-number*)))
+                          map-cells)))
+        (apply-weather (apply #'max atts)))))
 
 ;; hashing explored-map and intensity-map over x and y coordinates,
 ;; this seems to work efficiently so far..
@@ -52,7 +54,9 @@
 (defun get-map-points (x y)
   (ecase *level-type*
     (:predefined
-     (aref *level* y x))
+     (if (or (< x 0) (< y 0) (>= x *level-width*) (>= y *level-height*))
+         nil
+         (aref *level* y x)))
     (:perlin
      (funcall *level* x y))))
 

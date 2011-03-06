@@ -76,8 +76,8 @@
         (intensity 1.0))
     (mapcar #'(lambda (point)
                 (destructuring-bind (x y) point
-                  (setf intensity (* intensity
-                                     (- 1 (funcall attenuation-key x y))))))
+                  (let ((atten (or (funcall attenuation-key x y) 1)))
+                    (setf intensity (* intensity (- 1 atten))))))
             (rest path))
     intensity))
 
@@ -98,8 +98,7 @@
          (destructuring-bind (off-x off-y) offset
            (let ((d-x (+ off-x x))
                  (d-y (+ off-y y)))
-             (unless (or (< d-x 0) (< d-y 0) (>= d-x map-width) (>= d-y map-height))
-               (let ((final-intensity (trace-light-intensity d-x d-y x y attenuation-key)))
-                 (when (> final-intensity min-intensity)
-                   (push (list d-x d-y final-intensity) results)))))))
+             (let ((final-intensity (trace-light-intensity d-x d-y x y attenuation-key)))
+               (when (> final-intensity min-intensity)
+                 (push (list d-x d-y final-intensity) results))))))
     results))

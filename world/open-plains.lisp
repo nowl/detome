@@ -13,7 +13,7 @@
            ((> per 0.6) '(0 8))
            (t '(0))))))
 
-  (place-monster "rat" 10 10)
+  (place-monster "rat" -10 -10)
   
   (make-object
    :name "plains monster creator"
