@@ -6,8 +6,8 @@
   :version "0.1"
   :author "John Process <esologic@gmail.com>"
   :licence "GNU Public License"
-  :depends-on (lispbuilder-sdl
-               lispbuilder-sdl-image)
+  :depends-on ("lispbuilder-sdl"
+               "lispbuilder-sdl-image")
   :components
   ((:module "black"
             :components

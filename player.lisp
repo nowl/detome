@@ -42,8 +42,7 @@
                                   ,dmg-txt
                                   (:color "ffffff") " damage"))
                   (add-damage-hover actor2 dmg-txt "ff0000")
-                  (decf (hp actor2) dmg)
-                  (flash-hp))
+                  (decf (hp actor2) dmg))
                  (t (textarea-log `((:color "00ff00") ,(name (mon-type actor1))
                                     (:color "ffffff") " misses you"))
                     (add-damage-hover actor2 "missed" "7f0000")))))))
@@ -64,36 +63,22 @@
 
 (make-object
  :name "health renderer"
- :render-level "textarea"
+ :render-level "hud"
  :render-cb #'(lambda (obj)
-                (when (or *draw-textarea-window* (get-meta :visible obj))
-                  (sdl:draw-string-solid-* "HP:"
-                                           (first *health-placement*)
-                                           (second *health-placement*)
-                                           :color (sdl:color :r #xff :g 0 :b 0)
-                                           :font *larger-font*)
-                  (let* ((start (+ (* 4 *larger-font-width*) (first *health-placement*)))
-                         (width (- *screen-width* start 15)))
-                    (sdl:draw-box-* start
-                                    (second *health-placement*)
-                                    width
-                                    *larger-font-height*
-                                    :color (sdl:color :r #x5f :g 0 :b 0))
-                    (sdl:draw-box-* start
-                                    (second *health-placement*)
-                                    (max (floor (* width (/ (hp *player*) (hp-max *player*)))) 0)
-                                    *larger-font-height*
-                                    :color (sdl:color :r #xff :g 0 :b 0))))))
-
-(make-object
- :name "hp enabler"
- :update-cb #'(lambda (obj)
-                (declare (ignore obj))
-                (set-meta (:visible (lookup-by-name "health renderer")) nil))
- :update-cb-control :none)
-
-
-(defun flash-hp ()
-  (set-meta (:visible (lookup-by-name "health renderer")) t)
-  (setf (update-cb-control (lookup-by-name "hp enabler"))
-        `(:seconds ,*seconds-for-health-flash*)))
+                (sdl:draw-string-solid-* "HP:"
+                                         (first *health-placement*)
+                                         (second *health-placement*)
+                                         :color (sdl:color :r #xff :g 0 :b 0)
+                                         :font *larger-font*)
+                (let* ((start (+ (* 4 *larger-font-width*) (first *health-placement*)))
+                       (width (third *health-placement*)))
+                  (sdl:draw-box-* start
+                                  (second *health-placement*)
+                                  width
+                                  *larger-font-height*
+                                  :color (sdl:color :r #x5f :g 0 :b 0))
+                  (sdl:draw-box-* start
+                                  (second *health-placement*)
+                                  (max (floor (* width (/ (hp *player*) (hp-max *player*)))) 0)
+                                  *larger-font-height*
+                                  :color (sdl:color :r #xff :g 0 :b 0)))))

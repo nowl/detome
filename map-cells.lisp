@@ -23,9 +23,12 @@
 
 (define-map-cell 0
     "plain"
-  :attenuation 0.1
+  :attenuation 0.01
   :walkable t
-  :image "plain")
+  :image #'(lambda (x y)
+             (case (floor (* 2 (perlin2d x y 1 4)))
+               (0 "plain")
+               (t "plain-2"))))
 (define-map-cell 1
     "wall"
   :attenuation 1.0
@@ -50,7 +53,10 @@
   "tree"
   :attenuation 0.1
   :walkable t
-  :image "tree")
+  :image #'(lambda (x y)
+             (case (floor (* 2 (perlin2d x y 1.1 4)))
+               (0 "tree-1")
+               (t "tree-2"))))
 (define-map-cell 9
   "dust-1"
   :attenuation 0.1

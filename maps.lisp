@@ -93,8 +93,11 @@
   (let ((darken-amount (darken-amount-at-point x y)))
     (let ((images (mapcar #'(lambda (mp) (map-cell-image (gethash mp *map-cells-by-number*)))
                           (get-map-points x y))))
-      (loop for image in images collecting
-           (get-image image :darken darken-amount)))))
+      (loop for image in images collecting           
+           (get-image (etypecase image
+                        (simple-string image)
+                        (function (funcall image x y)))
+                      :darken darken-amount)))))
 
 (defgeneric get-screen-pos-of (obj)
   (:documentation 

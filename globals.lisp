@@ -1,6 +1,6 @@
 (in-package #:detome)
 
-(defparameter *map-window* '(0 0 32 24)
+(defparameter *map-window* '(0 0 32 22)
   "The viewport of the map on the screen in terms of tiles. The
   ordering goes x and y location of the upper left corner of the map
   then width and height follow.")
@@ -39,8 +39,7 @@
 (defparameter *draw-message-exclamation* nil)
 (defparameter *seconds-to-remove-message-notification* 3)
 
-(defparameter *health-placement* `(,(- *screen-width* 250) ,(+ 32 16)))
-(defparameter *seconds-for-health-flash* 3)
+(defparameter *health-placement* `(8 ,(+ *screen-height* -64 2) ,(* 32 4)))
 
 ;; (defparameter *default-message-textarea-window*
 ;;   (list 0

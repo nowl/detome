@@ -54,6 +54,7 @@
                 ;;(populate-monsters)
                 (set-render-order '("background"
                                     "base"
+                                    "hud"
                                     "textarea"
                                     "notifications"))
                 ;;(build-rat-basement))

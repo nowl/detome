@@ -88,8 +88,7 @@
                         (let ((hp-gain (rand 10 5)))
                           (incf (hp *player*) hp-gain)
                           (textarea-log `("Although somewhat tough, the rat chunch provides you with "
-                                          (:color "00ff00") ,(format nil "~d" hp-gain) (:color "ffffff") " hp"))
-                          (flash-hp))
+                                          (:color "00ff00") ,(format nil "~d" hp-gain) (:color "ffffff") " hp")))
                         (setf (inv *player*) (delete obj (inv *player*)))))
                   1)
   
