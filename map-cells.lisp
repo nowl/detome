@@ -67,3 +67,14 @@
   :attenuation 0.1
   :walkable t
   :image "dust-2")
+
+(define-map-cell 11
+  "cave"
+  :attenuation 0.75
+  :walkable t
+  :image "cave")
+(define-map-cell 12
+  "trader"
+  :attenuation 0.2
+  :walkable t
+  :image "trader")

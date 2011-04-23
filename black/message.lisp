@@ -40,7 +40,7 @@
 
 (defun deliver-broadcast-message (message type)
   (declare (message message))
-  (log :debug "~a" message)
+  ;(log :debug "~a" message)
   (if (null (type message))
       (error 'object-nonexistent-error :text (format nil "broadcast message has no type")))
   (unless *game-state*

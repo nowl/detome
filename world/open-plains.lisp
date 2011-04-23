@@ -9,10 +9,14 @@
    #'(lambda (x y)
        (let ((per (perlin2d x y 0.1 4)))
          (cond
-           ((> per 0.75) '(0 2))
+           ((> per 0.75) (if (= (floor (* 100 (perlin2d x y 1 2))) 0)
+                             '(0 2 11)
+                             '(0 2)))
            ((> per 0.7) '(0 9))
            ((> per 0.6) '(0 8))
-           (t '(0))))))
+           (t (if (= (floor (* 50 (perlin2d x y 1 2))) 0)
+                             '(0 12)
+                             '(0)))))))
 
   (place-monster "rat" -10 -10)
   

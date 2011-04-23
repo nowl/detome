@@ -30,16 +30,25 @@
 ;;   "This defines the rightmost region of the screen where text messages may appear.")
 
 (defparameter *default-message-textarea-window*
-  (list 0
-        0
-        (- *screen-width* 150)
-        *screen-height*))
+  (list (+ (* 32 18))
+        (+ *screen-height* -64 2)
+        (- *screen-width* (+ (* 32 18)))
+        (- *screen-height* (+ *screen-height* -64 2))))
 
-(defparameter *draw-textarea-window* nil)
-(defparameter *draw-message-exclamation* nil)
-(defparameter *seconds-to-remove-message-notification* 3)
+(defparameter *draw-textarea-window* t)
+;;(defparameter *draw-message-exclamation* nil)
+;;(defparameter *seconds-to-remove-message-notification* 3)
 
-(defparameter *health-placement* `(8 ,(+ *screen-height* -64 2) ,(* 32 4)))
+(defparameter *health-placement* `(8 ,(+ *screen-height* -64 2) ,(* 32 12)))
+(defparameter *attack-placement* `(8 ,(+ *screen-height* -64 16 2 2)))
+(defparameter *damage-placement* `(,(+ (* 32 5)) ,(+ *screen-height* -64 16 2 2)))
+(defparameter *defense-placement* `(,(+ (* 32 10)) ,(+ *screen-height* -64 16 2 2)))
+(defparameter *provision-placement* `(8 ,(+ *screen-height* -64 32 2 2 2)))
+(defparameter *location-placement* `(,(+ (* 32 5)) ,(+ *screen-height* -64 32 2 2 2)))
+(defparameter *g-energy-placement* `(,(+ (* 32 14)) ,(+ *screen-height* -64 2)))
+(defparameter *b-energy-placement* `(,(+ (* 32 16)) ,(+ *screen-height* -64 2)))
+(defparameter *r-energy-placement* `(,(+ (* 32 14)) ,(+ *screen-height* -64 16 2 2)))
+(defparameter *y-energy-placement* `(,(+ (* 32 16)) ,(+ *screen-height* -64 16 2 2)))
 
 ;; (defparameter *default-message-textarea-window*
 ;;   (list 0
@@ -98,3 +107,35 @@
 
 (defparameter *play-game-state* (make-instance 'game-state))
 (switch *play-game-state*)
+
+;; traders
+
+(defparameter *traders*
+  ;; G B R Y -> PRV DFS ATK DMG HP
+  '(((2 0 0 0) (500 0 0 0 0))
+    ((5 1 0 0) (0 1 0 0 0))
+    ((5 0 1 0) (0 0 1 0 0))
+    ((5 2 2 1) (0 0 0 1 0))
+    ((5 2 3 0) (0 0 0 0 5))))
+
+(defparameter *mob-levels*
+  '(0 (rat large-rat)
+    1 (mummy fighter)
+    2 (skeleton mage)
+    3 (demon eye)
+    4 (spider wasp)
+    5 (worm)
+    6 (great-demon)))
+
+(defparameter *terrain-levels*
+  '(1 (cellar)
+    2 (red-speckled dirt)
+    3 (cellar water)
+    4 (black-dirt water)
+    5 (black-dirt)
+    6 (black-dirt lava)))
+
+;; items
+
+(defparameter *items-in-level* nil)
+(defparameter *discovered-traders* (make-hash-table :test #'equal))

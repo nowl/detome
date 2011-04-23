@@ -108,8 +108,7 @@
   (values (* (- (x obj) (first *map-window*)) 32)
           (* (- (y obj) (second *map-window*)) 32)))
 
-
-(defun draw-background ()
+(defun get-map-window-extents ()
   (let ((x-start (ecase *level-type*
                    (:predefined (max (first *map-window*) 0))
                    (:perlin (first *map-window*))))
@@ -128,6 +127,12 @@
                                          (second *map-window*))))
                     (:perlin (+ (fourth *map-window*)
                                 (second *map-window*))))))
+    (list x-start y-start x-extent y-extent)))
+
+
+(defun draw-background ()
+  (destructuring-bind (x-start y-start x-extent y-extent)
+      (get-map-window-extents)
     (loop for x from x-start below x-extent do
          (loop for y from y-start below y-extent do
               (loop for image in (image-from-maps x y) do
@@ -174,11 +179,11 @@
                 (ecase *environment*
                   (:outside (cond ((eq *weather* :clear)
                                    (setf *weather* :dark)
-                                   (textarea-log '("You feel the clastrophobic oppression of darkness."))
+                                   ;;(textarea-log '("You feel the clastrophobic oppression of darkness."))
                                    (update-intensity-map (x *player*) (y *player*) 1.0))
                                   ((eq *weather* :dark)
                                    (setf *weather* :clear)
-                                   (textarea-log '("The shadows become slightly less threatening as night becomes day."))
+                                   ;;(textarea-log '("The shadows become slightly less threatening as night becomes day."))
                                    (update-intensity-map (x *player*) (y *player*) 1.0))))))
  :update-cb-control `(:seconds ,*day-night-cycle-in-seconds*))
  ;;:update-cb-control :none);; `(:seconds ,*day-night-cycle-in-seconds*))

@@ -42,6 +42,7 @@
 					(not (eq walkable-reason :actor)))
 			   ;; we're blocked and not due to a monster or another
 			   ;; actor
+               #|
 			   (textarea-log `("Blocked going " (:color "0000ff") 
 												,(ecase delta-x
 														(1 (ecase delta-y
@@ -56,12 +57,39 @@
 															  (0 "west")
 															  (-1 "northwest"))))
 												(:color ,sdl:*white*) "!")))
+               |#
+               )
 			  (monsters (attack *player* (typecase monsters
 										   (cons (first monsters))
 										   (t monsters)))
 						(take-turn))
 			  (t (setf x new-x y new-y)
                  (take-turn)))))))
+
+(defun check-for-item-pickup ()
+  (loop for item in *items-in-level* do
+       (when (and (= (x item) (x *player*))
+                  (= (y item) (y *player*)))
+         (funcall (cb (item-type item)) item *player*)
+         (setf *items-in-level* (delete item *items-in-level*)))))
+
+(defun check-for-cave-entrance ()
+  (let ((cave-number (map-cell-number (gethash "cave" *map-cells-by-name*))))
+    (when (member cave-number (get-map-points (x *player*) (y *player*)))
+      (build-rat-basement))))
+
+(defun build-trade-orders (trader)
+  (format nil "~a" trader))
+
+(defun check-for-trader ()
+  (let ((trader-number (map-cell-number (gethash "trader" *map-cells-by-name*))))
+    (when (member trader-number (get-map-points (x *player*) (y *player*)))
+      (let ((trader (gethash (list (x *player*) (y *player*)) *discovered-traders*)))
+        (when (not trader)
+          (textarea-log '("Discovered a new trader!"))
+          (setf trader (random-choice *traders*)
+                (gethash (list (x *player*) (y *player*)) *discovered-traders*) trader))
+        (textarea-log (list (build-trade-orders trader)))))))
 
 (defmacro gen-move-command (key-symbol delta-x delta-y)
   ``((sdl:key= key ,,key-symbol)
@@ -70,6 +98,9 @@
       :action #'(lambda (sender receiver type)
                   (declare (ignore sender receiver type))
                   (attempt-move-player ,,delta-x ,,delta-y)
+                  (check-for-item-pickup)
+                  (check-for-trader)
+                  (check-for-cave-entrance)
                   (move-map-window-if-needed)
                   (update-intensity-map (x *player*) (y *player*) 1.0)))
      t))
@@ -93,14 +124,5 @@
              #.(gen-move-command :sdl-key-kp6 1 0)
              #.(gen-move-command :sdl-key-kp3 1 1)
              #.(gen-move-command :sdl-key-kp2 0 1)
-             #.(gen-move-command :sdl-key-kp1 -1 1)
-             ((sdl:key= key :sdl-key-e)
-              (loop for item in *items-in-level* do
-                   (when (and (= (x item) (x *player*))
-                              (= (y item) (y *player*)))
-                     (funcall (cb (item-type item)) item *player*)
-                     (setf *items-in-level* (delete item *items-in-level*)))))
-             ((sdl:key= key :sdl-key-space)
-              (setf *draw-textarea-window* (not *draw-textarea-window*)
-                    *draw-message-exclamation* nil)))))
+             #.(gen-move-command :sdl-key-kp1 -1 1))))
         (t nil))))

@@ -1,7 +1,9 @@
 (in-package #:detome)
 
 (defun define-images ()
-  (define-image "message-exclamation" "data/tileset.png" `(1 ,(1+ (* 3 33)) 32 32))
+  (define-image "cave" "data/tileset.png" `(1 ,(1+ (* 3 33)) 32 32))
+  (define-image "trader" "data/tileset.png" `(,(1+ (* 1 33)) ,(1+ (* 3 33)) 32 32))
+
   (define-image "plain" "data/tileset.png" '(1 1 32 32))
   (define-image "tree-1" "data/tileset.png" '(100 1 32 32))
   (define-image "tree-2" "data/tileset.png" `(,(1+ (* 9 33)) 1 32 32))
@@ -17,5 +19,7 @@
   (define-image "plain-2" "data/tileset.png" `(,(1+ (* 8 33)) 1 32 32))
 
   ;; items
-  (define-image "rat chunk" "data/tileset.png" `(1 ,(1+ (* 4 33)) 32 32))
-  (define-image "attack powerup" "data/tileset.png" `(,(1+ (* 1 33)) ,(1+ (* 4 33)) 32 32)))
+  (define-image "green energy" "data/tileset.png" `(1 ,(1+ (* 4 33)) 32 32))
+  (define-image "blue energy" "data/tileset.png" `(,(1+ (* 1 33)) ,(1+ (* 4 33)) 32 32))
+  (define-image "red energy" "data/tileset.png" `(,(1+ (* 2 33)) ,(1+ (* 4 33)) 32 32))
+  (define-image "yellow energy" "data/tileset.png" `(,(1+ (* 3 33)) ,(1+ (* 4 33)) 32 32)))

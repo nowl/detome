@@ -44,7 +44,7 @@
                  (y (cond ((< (y *player*) (y obj)) -1)
                           ((> (y *player*) (y obj)) 1)
                           (t 0))))
-             (textarea-log `("The " (:color "ff0000") ,(name (mon-type obj)) (:color "ffffff") " yells, \"You won't escape!\""))
+             ;;(textarea-log `("The " (:color "ff0000") ,(name (mon-type obj)) (:color "ffffff") " yells, \"You won't escape!\""))
              (attempt-move-monster obj x y))
            (let ((x (- (random 3) 1))
                  (y (- (random 3) 1)))
@@ -78,7 +78,7 @@
        (let ((val (random 1.0)))
          (make-drop-table 
           val
-          (("attack powerup" 0.2) ("rat chunk" 0.5)))))))
+          (("green energy" 0.1)))))))
 
 (define-monster-type
 	"giant rat"
@@ -101,4 +101,5 @@
        (let ((val (random 1.0)))
          (make-drop-table
           val
-          (("attack powerup" 0.5) ("rat chunk" 1.0)))))))
+          (("blue energy" 0.05) 
+           ("green energy" 0.2)))))))

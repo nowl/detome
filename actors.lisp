@@ -32,5 +32,9 @@
 	"Actor's inventory.")))
 
 (defclass player (actor)
-  ()
+  ((provisions :initarg :provisions :accessor provisions :type fixnum)
+   (g-energy :initarg :g-energy :accessor g-energy :type fixnum)
+   (b-energy :initarg :b-energy :accessor b-energy :type fixnum)
+   (r-energy :initarg :r-energy :accessor r-energy :type fixnum)
+   (y-energy :initarg :y-energy :accessor y-energy :type fixnum))
   (:default-initargs :inv nil :level 1))

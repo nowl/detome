@@ -73,4 +73,5 @@
   (setf (update-cb-control (lookup-by-name "bootstrap")) :one-shot)
 
   (textarea-log '("Welcome to " (:color "ff0000") "Detome" (:color "ffffff") "!"))
+  (textarea-log '("Journey to the bottom of a level 6 dungeon and find the legendary Detome."))
   (mainloop :sdl-flags (if fullscreen sdl:sdl-fullscreen 0)))

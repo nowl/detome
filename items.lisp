@@ -18,13 +18,7 @@
 	:initarg :cb :accessor cb :type function
     :documentation
 	"This is a function whose arguments are determined by the
-	item-type's class and is called whenever the item is 'used'.")
-   (level
-	:initarg :level :accessor level :type fixnum
-    :documentation
-	"The item-type's level meaning the minimum required level to use
-    the item and also affects which monsters may spawn this
-    item-type.")))
+	item-type's class and is called whenever the item is 'used'.")))
 
 (defclass item (map-object)
   ((location 
@@ -66,39 +60,28 @@
     (setf (location item) `(:map 0 ,val))))
 	
 (defparameter *item-types* (make-hash-table :test #'equal))
-(defparameter *items-in-level* nil)
 
-(defmacro make-item-type (name image-name type callback level)
+(defmacro make-item-type (name image-name type callback)
   `(setf (gethash ,name *item-types*)
          (make-instance 'item-type
                         :name ,name
                         :image-name ,image-name
                         :cls ,type
-                        :cb ,callback
-                        :level ,level)))
+                        :cb ,callback)))
 
 (defmacro get-item-type (name)
   `(gethash ,name *item-types*))
 
-(make-item-type "rat chunk"
-                  "rat chunk"
-                  :food
-                  #'(lambda (obj owner)
-                      (when (eq owner *player*)
-                        (let ((hp-gain (rand 10 5)))
-                          (incf (hp *player*) hp-gain)
-                          (textarea-log `("Although somewhat tough, the rat chunch provides you with "
-                                          (:color "00ff00") ,(format nil "~d" hp-gain) (:color "ffffff") " hp")))
-                        (setf (inv *player*) (delete obj (inv *player*)))))
-                  1)
-  
-(make-item-type "attack powerup"
-                "attack powerup"
-                :food
+(make-item-type "green energy"
+                "green energy"
+                :energy
                 #'(lambda (obj owner)
                     (when (eq owner *player*)
-                      (destructuring-bind (attmin attmax) (att-r *player*)
-                        (setf (att-r *player*) (list (1+ attmin) (1+ attmax))))
-                        (textarea-log `("You feel stronger!"))
-                        (setf (inv *player*) (delete obj (inv *player*)))))
-                1)
+                      (incf (g-energy *player*)))))
+
+(make-item-type "blue energy"
+                "blue energy"
+                :energy
+                #'(lambda (obj owner)
+                    (when (eq owner *player*)
+                      (incf (b-energy *player*)))))

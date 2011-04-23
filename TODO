@@ -1,0 +1,10 @@
+-*- mode:org -*-
+
+* TODO dungeon generation
+* TODO draw out the other monster images
+* TODO made trader dynamics work
+** TODO build out trade orders
+** TODO allow trade orders to take place
+* TODO make dungeons different levels
+* TODO perhaps do a listing feature of all discovered locations
+* TODO randomly seed procedural generation of the open area

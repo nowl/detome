@@ -100,14 +100,23 @@
            ,b
            ,value)))
 
-(defun draw-monsters ()  
-  (dolist (mon *monsters-in-level*)
-    (multiple-value-bind (x y) (get-screen-pos-of mon)
-      (let ((darken-amount (clip (- 1 (find-in-intensity-map (x mon) (y mon)))
-                                 0.0 1.0)))
-        (when (< darken-amount 1.0)
-          (sdl:draw-surface-at-* (get-image (image-name mon) :darken darken-amount) x y))))))
+(defun contained-by-map-window (x y)
+  (destructuring-bind (x-start y-start x-extent y-extent)
+      (get-map-window-extents)
+    (and (>= x x-start)
+         (< x x-extent)
+         (>= y y-start)
+         (< y y-extent))))
 
+(defun draw-monsters ()
+  (dolist (mon *monsters-in-level*)
+    (when (contained-by-map-window (x mon) (y mon))
+      (multiple-value-bind (x y) (get-screen-pos-of mon)
+        (let ((darken-amount (clip (- 1 (find-in-intensity-map (x mon) (y mon)))
+                                   0.0 1.0)))
+          (when (< darken-amount 1.0)
+            (sdl:draw-surface-at-* (get-image (image-name mon) :darken darken-amount) x y)))))))
+  
 (defun populate-monsters ()
   (loop for x below (+ 10 (random (array-dimension *level* 0)) ) do
        (push (get-random-monster (random (array-dimension *level* 1))
@@ -127,11 +136,11 @@
                   (when (<= (hp mon) 0)
                     (let ((drops (funcall (drops (mon-type mon)) mon)))
                       (remove-monster mon)
-                      (textarea-log `((:color "00ff00") ,(name (mon-type mon)) (:color "ffffff") " dies!"))
+                      ;(textarea-log `((:color "00ff00") ,(name (mon-type mon)) (:color "ffffff") " dies!"))
                       (when drops
                         (dolist (drop drops)
                           (when drop
-                            (textarea-log `(,(name (mon-type mon)) " drops a " ,drop))
+                            ;(textarea-log `(,(name (mon-type mon)) " drops a " ,drop))
                             (place-item drop `(:map ,(x mon) ,(y mon)))))))))))
 
 (defun actor-not-at (x y)
