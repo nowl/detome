@@ -170,9 +170,9 @@
   (let ((stairs-down-number (map-cell-number (gethash "stairs-down" *map-cells-by-name*))))
     (when (member stairs-down-number (get-map-points (x *player*) (y *player*)))
       (incf *d-level*)
-      (build-random-cave (+ 20 (random 100))
-                         (+ 20 (random 100))
-                         (+ 50 (random 200))
+      (build-random-cave (+ 100 (random 100))
+                         (+ 100 (random 100))
+                         (+ 500 (random 10000))
                          *d-level*)
       (return-from test-for-action-at-location t)))
 
