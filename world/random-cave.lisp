@@ -45,5 +45,11 @@
           (stairs-up-number (map-cell-number (gethash "stairs-up" *map-cells-by-name*))))
       (place-player (first player-loc) (second player-loc))
       (setf (aref *level* (second player-loc) (first player-loc))
-            (list 5 stairs-up-number)))))
+            (list 5 stairs-up-number)))
+    
+    ;; randomly place some monsters
+    (let ((num-monsters (+ 10 (random 50))))
+      (dotimes (n num-monsters)
+        (let ((mon-loc (random-choice floor-spaces)))
+          (place-random-monster 1 2 (first mon-loc) (second mon-loc)))))))
   

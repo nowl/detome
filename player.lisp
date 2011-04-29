@@ -6,7 +6,7 @@
                                 :name "player"
                                 :x 0
                                 :y 0
-                                :provisions 500
+                                :provisions 1000
                                 :g-energy 0
                                 :b-energy 0
                                 :r-energy 0

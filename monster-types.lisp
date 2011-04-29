@@ -78,7 +78,7 @@
        (let ((val (random 1.0)))
          (make-drop-table 
           val
-          (("green energy" 0.1)))))))
+          (("green energy" 0.3)))))))
 
 (define-monster-type
 	"giant rat"
@@ -101,5 +101,7 @@
        (let ((val (random 1.0)))
          (make-drop-table
           val
-          (("blue energy" 0.05) 
-           ("green energy" 0.2)))))))
+          (("yellow energy" 0.1)
+           ("red energy" 0.2)
+           ("blue energy" 0.6)
+           ("green energy" 0.9)))))))

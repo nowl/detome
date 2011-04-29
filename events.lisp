@@ -173,7 +173,8 @@
       (build-random-cave (+ 20 (random 100))
                          (+ 20 (random 100))
                          (+ 50 (random 200))
-                         *d-level*)))
+                         *d-level*)
+      (return-from test-for-action-at-location t)))
 
   ;; test for stairs up
   (let ((stairs-up-number (map-cell-number (gethash "stairs-up" *map-cells-by-name*))))
@@ -183,11 +184,12 @@
           (progn
             (build-open-plains)
             (place-player (first *player-cave-entrance-location*)
-                          (second *player-cave-entrance-location*)))            
+                          (second *player-cave-entrance-location*)))
           (build-random-cave (+ 20 (random 100))
                              (+ 20 (random 100))
                              (+ 50 (random 200))
-                             *d-level*))))
+                             *d-level*))
+      (return-from test-for-action-at-location t)))
   
   ;; test for cave entrance
   (let ((cave-number (map-cell-number (gethash "cave" *map-cells-by-name*))))
@@ -198,7 +200,8 @@
       (build-random-cave (+ 20 (random 100))
                          (+ 20 (random 100))
                          (+ 50 (random 200))
-                         *d-level*)))
+                         *d-level*)
+      (return-from test-for-action-at-location t)))
 
 
   t)
