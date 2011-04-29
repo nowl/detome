@@ -105,3 +105,29 @@
            ("red energy" 0.2)
            ("blue energy" 0.6)
            ("green energy" 0.9)))))))
+
+(define-monster-type
+	"spider"
+	"spider"
+	2
+  #'(lambda ()
+      (+ 8 (random 8)))
+  #'(lambda ()
+      (list 3 (1+ (random 12))))
+  #'(lambda ()
+      (list 3 (1+ (random 12))))
+  #'(lambda ()
+      (list 3 (1+ (random 12))))
+  ;;#'(lambda (obj)
+  ;;    nil))
+  #'random-walk-movement-with-chase
+  #'(lambda (mob)
+      (declare (ignore mob))
+      (list
+       (let ((val (random 1.0)))
+         (make-drop-table
+          val
+          (("yellow energy" 0.3)
+           ("red energy" 0.4)
+           ("blue energy" 0.5)
+           ("green energy" 1.0)))))))
