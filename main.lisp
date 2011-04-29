@@ -31,7 +31,7 @@
                 (declare (ignore obj))
                 (when (<= (hp *player*) 0)
                   (reset-player)
-                  (build-rat-basement))))
+                  (build-open-plains))))
 
 ;;(add (lookup-by-name "textarea renderer") *message-game-state*)
 
@@ -57,9 +57,8 @@
                                     "hud"
                                     "textarea"
                                     "notifications"))
-                ;;(build-rat-basement))
-                ;;(build-random-cave 50 50 50 1))
                 (build-open-plains))
+                ;;(place-player -37 97))
  
  :update-cb-control :one-shot)
 
@@ -74,5 +73,5 @@
   (setf (update-cb-control (lookup-by-name "bootstrap")) :one-shot)
 
   (textarea-log '("Welcome to " (:color "ff0000") "Detome" (:color "ffffff") "!"))
-  (textarea-log '("Journey to the bottom of a level 6 dungeon and find the legendary Detome."))
+  ;;(textarea-log '("Find the legendary Detome."))
   (mainloop :sdl-flags (if fullscreen sdl:sdl-fullscreen 0)))

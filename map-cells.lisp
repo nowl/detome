@@ -78,3 +78,14 @@
   :attenuation 0.2
   :walkable t
   :image "trader")
+
+(define-map-cell 13
+  "stairs-up"
+  :attenuation 0.3
+  :walkable t
+  :image "stairs-up")
+(define-map-cell 14
+  "stairs-down"
+  :attenuation 0.3
+  :walkable t
+  :image "stairs-down")

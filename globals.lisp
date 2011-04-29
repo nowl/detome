@@ -101,7 +101,7 @@
 
 ;; logging
 
-(set-log-level :debug)
+(set-log-level :info)
 
 ;; game states
 
@@ -139,3 +139,7 @@
 
 (defparameter *items-in-level* nil)
 (defparameter *discovered-traders* (make-hash-table :test #'equal))
+
+;; current d-level
+(defparameter *d-level* 0)
+(defparameter *player-cave-entrance-location* nil)

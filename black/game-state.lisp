@@ -55,6 +55,11 @@
 (defmethod remove ((obj object) (state game-state))
   (remove obj (object-manager state)))
 
+(defmethod remove ((obj string) (state game-state))
+  (let ((o (get-object-by-name obj)))
+    (when o
+      (remove o (object-manager state)))))
+
 (defun get-object-by-name (obj-name)
   (declare (simple-string obj-name))
   (let ((obj (gethash obj-name (object-name-lookup (object-manager *game-state*)))))

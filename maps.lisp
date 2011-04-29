@@ -65,10 +65,10 @@
   (set-in-intensity-map x y intensity)
   (let ((sights (line-of-sight x y
                                (ecase *level-type*
-                                 (:predefined *level-width*)
+                                 (:predefined (1- *level-width*))
                                  (:perlin (+ x 100)))
                                (ecase *level-type*
-                                 (:predefined *level-height*)
+                                 (:predefined (1- *level-height*))
                                  (:perlin (+ y 100)))
                                #'(lambda (x y)
                                    (attenuation-lookup (get-map-points x y)))

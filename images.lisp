@@ -3,6 +3,8 @@
 (defun define-images ()
   (define-image "cave" "data/tileset.png" `(1 ,(1+ (* 3 33)) 32 32))
   (define-image "trader" "data/tileset.png" `(,(1+ (* 1 33)) ,(1+ (* 3 33)) 32 32))
+  (define-image "stairs-up" "data/tileset.png" `(1 ,(1+ (* 5 33)) 32 32))
+  (define-image "stairs-down" "data/tileset.png" `(,(1+ (* 1 33)) ,(1+ (* 5 33)) 32 32))
 
   (define-image "plain" "data/tileset.png" '(1 1 32 32))
   (define-image "tree-1" "data/tileset.png" '(100 1 32 32))

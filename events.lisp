@@ -76,10 +76,20 @@
 (defun check-for-cave-entrance ()
   (let ((cave-number (map-cell-number (gethash "cave" *map-cells-by-name*))))
     (when (member cave-number (get-map-points (x *player*) (y *player*)))
-      (build-random-cave (+ 20 (random 100))
-                         (+ 20 (random 100))
-                         (+ 20 (random 100))
-                         1))))
+      (textarea-log (list "Discovered a cave entrance!"))
+      (textarea-log `("Press " (:color "ff0000") "e" (:color ,sdl:*white*) " to enter this cave.")))))
+
+(defun check-for-stairs-up-entrance ()
+  (let ((stairs-up-number (map-cell-number (gethash "stairs-up" *map-cells-by-name*))))
+    (when (member stairs-up-number (get-map-points (x *player*) (y *player*)))
+      (textarea-log (list "Discovered a stairway up!"))
+      (textarea-log `("Press " (:color "ff0000") "e" (:color ,sdl:*white*) " to ascend.")))))
+
+(defun check-for-stairs-down-entrance ()
+  (let ((stairs-down-number (map-cell-number (gethash "stairs-down" *map-cells-by-name*))))
+    (when (member stairs-down-number (get-map-points (x *player*) (y *player*)))
+      (textarea-log (list "Discovered a stairway down!"))
+      (textarea-log `("Press " (:color "ff0000") "e" (:color ,sdl:*white*) " to descend.")))))
 
 (defun build-trade-orders (trader)
   (with-output-to-string (str)
@@ -154,7 +164,45 @@
                   (list (+ (first (dmg-r *player*)) (fourth trade))
                         (+ (second (dmg-r *player*)) (fourth trade)))))
           (when (plusp (fifth trade))
-            (incf (hp-max *player*) (fifth trade))))))))
+            (incf (hp-max *player*) (fifth trade)))))))
+
+  ;; test for stairs down
+  (let ((stairs-down-number (map-cell-number (gethash "stairs-down" *map-cells-by-name*))))
+    (when (member stairs-down-number (get-map-points (x *player*) (y *player*)))
+      (incf *d-level*)
+      (build-random-cave (+ 20 (random 100))
+                         (+ 20 (random 100))
+                         (+ 50 (random 200))
+                         *d-level*)))
+
+  ;; test for stairs up
+  (let ((stairs-up-number (map-cell-number (gethash "stairs-up" *map-cells-by-name*))))
+    (when (member stairs-up-number (get-map-points (x *player*) (y *player*)))
+      (decf *d-level*)
+      (if (= *d-level* 0)
+          (progn
+            (build-open-plains)
+            (place-player (first *player-cave-entrance-location*)
+                          (second *player-cave-entrance-location*)))            
+          (build-random-cave (+ 20 (random 100))
+                             (+ 20 (random 100))
+                             (+ 50 (random 200))
+                             *d-level*))))
+  
+  ;; test for cave entrance
+  (let ((cave-number (map-cell-number (gethash "cave" *map-cells-by-name*))))
+    (when (member cave-number (get-map-points (x *player*) (y *player*)))
+      (cleanup-open-plains)
+      (setf *player-cave-entrance-location* (list (x *player*) (y *player*)))
+      (setf *d-level* 1)
+      (build-random-cave (+ 20 (random 100))
+                         (+ 20 (random 100))
+                         (+ 50 (random 200))
+                         *d-level*)))
+
+
+  t)
+
 
 (defmacro gen-move-command (key-symbol delta-x delta-y)
   ``((sdl:key= key ,,key-symbol)
