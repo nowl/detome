@@ -85,3 +85,17 @@
                 #'(lambda (obj owner)
                     (when (eq owner *player*)
                       (incf (b-energy *player*)))))
+
+(make-item-type "red energy"
+                "red energy"
+                :energy
+                #'(lambda (obj owner)
+                    (when (eq owner *player*)
+                      (incf (r-energy *player*)))))
+
+(make-item-type "yellow energy"
+                "yellow energy"
+                :energy
+                #'(lambda (obj owner)
+                    (when (eq owner *player*)
+                      (incf (y-energy *player*)))))
