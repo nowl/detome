@@ -49,6 +49,11 @@
                  :update-cb (ai-cb type)
                  :update-cb-control '(:turns 0)))
   
+
+(defparameter *monster-types-by-level* nil
+  "This is a sorted list of level and monster-type objects.")
+(defparameter *monster-type-lookup* (make-hash-table :test 'equal))
+
 (defun get-random-monster (x y min-level max-level)
   (let ((min-pos (position-if #'(lambda (x) (>= x min-level)) *monster-types-by-level* :key #'car))
         (max-pos (position-if #'(lambda (x) (<= x max-level)) *monster-types-by-level* :from-end t :key #'car)))
@@ -57,11 +62,6 @@
                     (+ (random tmp) min-pos)
                     min-pos)))
       (create-monster-from-type x y (cadr (nth val *monster-types-by-level*))))))
-
-(defparameter *monster-types-by-level* nil
-  "This is a sorted list of level and monster-type objects.")
-
-(defparameter *monster-type-lookup* (make-hash-table :test 'equal))
 
 (defmacro define-monster-type (name image-name level hp-gen att-r-gen dmg-r-gen def-r-gen ai-cb drops)
   (let ((mt (gensym)))
@@ -86,8 +86,8 @@
 (defparameter *monsters-in-level* nil)
 
 (defun clear-monsters-from-level ()
-  (loop for mon in *monsters-in-level* do
-       (remove mon *play-game-state*))
+  ;;(loop for mon in *monsters-in-level* do
+  ;;     (remove mon *play-game-state*))
   (setf *monsters-in-level* nil))
 
 (defun monsters-at (x y)
@@ -115,7 +115,7 @@
         (let ((darken-amount (clip (- 1 (find-in-intensity-map (x mon) (y mon)))
                                    0.0 1.0)))
           (when (< darken-amount 1.0)
-            (sdl:draw-surface-at-* (get-image (image-name mon) :darken darken-amount) x y)))))))
+            (sdl:draw-surface-at-* (bf:get-image (image-name mon) :darken darken-amount) x y)))))))
   
 (defun populate-monsters ()
   (loop for x below (+ 10 (random (array-dimension *level* 0)) ) do
@@ -125,9 +125,10 @@
              *monsters-in-level*)))
 
 (defun remove-monster (monster)
-  (setf *monsters-in-level* (delete monster *monsters-in-level*))
-  (remove monster *play-game-state*))
+  (setf *monsters-in-level* (delete monster *monsters-in-level*)))
+  ;;(remove monster *play-game-state*))
 
+#|
 (make-object
  :name "monster garbage collector"
  :update-cb #'(lambda (obj)
@@ -142,6 +143,7 @@
                           (when drop
                             ;(textarea-log `(,(name (mon-type mon)) " drops a " ,drop))
                             (place-item drop `(:map ,(x mon) ,(y mon)))))))))))
+|#
 
 (defun actor-not-at (x y)
   ;; test other monsters

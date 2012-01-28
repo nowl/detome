@@ -1,30 +1,6 @@
 (in-package #:detome)
 
-(make-object
- :name "background render"
- :render-level "background"
- :render-cb #'(lambda (obj)
-                (declare (ignore obj))
-                (draw-background)))
-
-(make-object
- :name "base renderer"
- :render-level "base"
- :render-cb #'(lambda (obj)
-                (declare (ignore obj))
-                (draw-monsters)
-                (draw-items)
-                (draw-player)
-                (draw-hover-messages)))
-
-(make-object
- :name "textarea renderer"
- :render-level "textarea"
- :render-cb #'(lambda (obj)
-                (declare (ignore obj))
-                (when *draw-textarea-window*
-                  (draw-message-textarea *message-area-strings*))))
-
+#|
 (make-object
  :name "player death detector"
  :update-cb #'(lambda (obj)
@@ -32,46 +8,52 @@
                 (when (<= (hp *player*) 0)
                   (reset-player)
                   (build-open-plains))))
+|#
 
-;;(add (lookup-by-name "textarea renderer") *message-game-state*)
+(defmethod bf:init ((obj (eql 'detome)))
+  (bf:log :info "game initialization")
+  (setf *primary-font* (sdl:initialise-default-font *primary-font-name*))
+  (setf *larger-font* (sdl:initialise-default-font *larger-font-name*))
+  (sdl:enable-alpha t :surface sdl:*default-display*)
+  ;;(sdl:enable-alpha t :surface sdl:*default-surface*)
+  (sdl:enable-key-repeat 500 50)
+  (define-images)
+  (reset-player)
+  (build-open-plains))
 
-;; This is a one-shot updater that sets up some various sdl-specific
-;; things that are required after sdl-init and also serves to
-;; bootstrap the game and enter the first level.
-(make-object
- :name "bootstrap"
- :update-cb #'(lambda (obj)
-                (declare (ignore obj))
-                (setf *primary-font* (sdl:initialise-default-font *primary-font-name*))
-                (setf *larger-font* (sdl:initialise-default-font *larger-font-name*))
-                (sdl:enable-alpha t :surface sdl:*default-display*)
-                (sdl:enable-alpha t :surface sdl:*default-surface*)
-                (sdl:enable-key-repeat 500 50)
-                (define-images)
-                (reset-player)
-                ;;(update-intensity-map (x *player*) (y *player*) 1.0)
-                ;;(clear-explored-map)
-                ;;(populate-monsters)
-                (set-render-order '("background"
-                                    "base"
-                                    "hud"
-                                    "textarea"
-                                    "notifications"))
-                (build-open-plains))
-                ;;(place-player -37 97))
- 
- :update-cb-control :one-shot)
 
-(make-object :name "global message receiver"
-             :update-cb-control '(:ticks 1))
-
-;; This is the main entry point. It should do any initialization
-;; before entering the mainloop in black.
-(defun detome (&optional (fullscreen nil))
+;; This is the main entry point
+(defun detome (&optional fullscreen)
   ;; reinit
-  (set-render-order nil)
-  (setf (update-cb-control (lookup-by-name "bootstrap")) :one-shot)
+  ;;;(set-render-order nil)
+  ;;;(setf (update-cb-control (lookup-by-name "bootstrap")) :one-shot)
 
   (textarea-log '("Welcome to " (:color "ff0000") "Detome" (:color "ffffff") "!"))
-  ;;(textarea-log '("Find the legendary Detome."))
-  (mainloop :sdl-flags (if fullscreen sdl:sdl-fullscreen 0)))
+  (textarea-log '("Find the legendary Detome."))
+  (bf:mainloop 'detome :ms-per-update (/ 1000 *game-ticks-per-second*)
+               :sdl-flags (if fullscreen sdl:sdl-fullscreen 0)))
+
+(defparameter *update-inbox* nil)
+
+;; messages directed to the update function
+(defmethod bf:process-message ((obj (eql :update)) message delivery-type)
+  (etypecase (bf:message-payload message)
+    (function (push (bf:message-payload message)
+                    *update-inbox*))))
+
+(defmethod bf:update ((obj (eql 'detome)) tick)
+  (loop for message in *update-inbox* do
+       (funcall message))
+  (setf *update-inbox* nil))
+
+(defmethod bf:render ((obj (eql 'detome)) interpolation)
+  (draw-background)
+  ;;(draw-monsters)
+  ;;(draw-items)
+  (draw-player)
+  ;;(draw-hover-messages)
+  ;;(draw-hud)
+  (when *draw-textarea-window*
+    (draw-message-textarea *message-area-strings*))
+  ;;(draw-notifications))
+  )

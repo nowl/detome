@@ -6,22 +6,21 @@
   :version "0.1"
   :author "John Process <esologic@gmail.com>"
   :licence "GNU Public License"
-  :depends-on (black-engine)
+  :depends-on (blackfish)
   :components
   ((:file "package")
    (:file "globals")
    (:file "message")
+   (:file "images")
    (:file "actors")
+   (:file "textarea")
    (:file "items")
    (:file "map-cells")
-   (:file "images")
    (:file "hovers")
    (:file "player")
    (:file "dungeon")
    (:file "world-macros")
    (:file "monster")
-   (:file "textarea")
-   (:file "events")
    (:file "maps")
    (:file "monster-types")
    (:module "world"
@@ -30,5 +29,7 @@
              (:file "open-plains")
              (:file "random-cave"))
             :serial t)
+   (:file "events")
+   (:file "process-message")
    (:file "main"))
   :serial t)

@@ -1,6 +1,4 @@
-(in-package #:black)
-
-(export '(random-choice random-weighted-choice))
+(in-package #:blackfish)
 
 (defun random-choice (list)
   (nth (random (length list))

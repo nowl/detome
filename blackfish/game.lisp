@@ -1,48 +1,48 @@
-(in-package #:black)
+(in-package #:blackfish)
 
-(export '(mainloop
-		  reset-game))
+(defgeneric init (obj)
+  (:documentation
+   "This will be called on the specific object after SDL initialization."))
+
+(defgeneric render (obj interpolation)
+  (:documentation
+   "This represents the act of 'rendering' a specific object."))
+
+(defgeneric update (obj tick)
+  (:documentation
+   "This represents the act of 'updating' a specific object."))
 
 (defparameter *loops* 0)
+(defparameter *game-tick* 0)
 (defparameter *next-update-in-ms* 0)
+(defparameter *screen-height* 600)
+(defparameter *screen-width* 800)
+(defparameter *ms-per-update* (/ 1000 15))
+(defparameter *max-frame-skip* 5)
 
 (defun get-tick-count ()  
   (coerce (truncate (system-ticks)) 'fixnum))
 
-(defmethod render ((obj null))
-  (log :warning "*game-state* seems to be nil!"))
-
-(defmethod update ((obj null))
-  (log :warning "*game-state* seems to be nil!"))
-
-(defun main-render (interpolation)
-  (setf *interpolation* interpolation)
-  (incf *render-tick*)
+(defun main-render (object interpolation)
   (fill-surface *black*)
-  (render *game-state*)
+  (render object interpolation)
   (update-display *default-surface*)
   (blit-surface *default-surface* *default-display*)
   (update-display))
 
-(defun main-update ()
+(defun main-update (object)
   (incf *game-tick*)
-  (process-messages)
-  (update *game-state*))
+  (update object *game-tick*))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun gen-event-form (sdl-event-name args)
 	`(,sdl-event-name ,args
-                      (make-and-send-message 
-                       :sender "main-loop"
+                      (send-message 
+                       :sender :blackfish-main-loop
                        :receiver nil
-                       :mes-type "sdl-event"
-                       :action #'(lambda (sender receiver mes-type)
-                                   (declare (ignore sender mes-type))
-                                   (multiple-value-bind (func hit) (gethash :sdl-event-cb (meta receiver))
-                                     (if hit
-                                         (funcall func ,sdl-event-name ,@args)
-                                         nil)))
-                       :type :async))))
+                       :type :sdl-event
+                       :payload (list ,sdl-event-name ,@args)
+                       :delivery-type :async))))
 
 (defmacro gen-idle-event ()
   (let ((current-time (gensym)))
@@ -52,16 +52,16 @@
 	   (progn
 	     (incf *loops*)
 	     (incf *next-update-in-ms* *ms-per-update*)
-	     (main-update))
+	     (main-update object))
 	   (progn
 	     (setf *loops* 0)
-	     (main-render (float (/ (- ,current-time (- *next-update-in-ms* *ms-per-update*)) *ms-per-update*))))))))
+	     (main-render object (float (/ (- ,current-time (- *next-update-in-ms* *ms-per-update*)) *ms-per-update*))))))))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defparameter *event-list-data*
     '((:active-event (:gain gain :state state))
-      (:key-down-event (:state state :scancode scancode :key key :mod mod :mod-key mod-key :unicode unicode))
-      (:key-up-event (:state state :scancode scancode :key key :mod mod :mod-key mod-key :unicode unicode))
+      (:key-down-event (:key key :mod mod :mod-key mod-key))
+      (:key-up-event (:key key :mod mod :mod-key mod-key))
       (:mouse-motion-event (:state state :x x :y y :x-rel x-rel :y-rel yrel))
       (:mouse-button-down-event (:button button :state state :x x :y y))
       (:mouse-button-up-event (:button button :state state :x x :y y))
@@ -82,14 +82,21 @@
             (gen-event-form (first event) (second event)))
      (:idle () (gen-idle-event))))
 
-(defun mainloop (&key (sdl-flags 0) title)
+(defun mainloop (object
+                 &key (init-width *screen-width*) (init-height *screen-height*)
+                 (ms-per-update *ms-per-update*) (max-frame-skip *max-frame-skip*)
+                 (sdl-flags 0) title)
+  (setf *screen-width* init-width
+        *screen-height* init-height
+        *ms-per-update* (float ms-per-update)
+        *max-frame-skip* max-frame-skip)
   (let ((total-flags (logior sdl-flags sdl-sw-surface)))
 	(with-init ()
 	  (window *screen-width* *screen-height* :flags total-flags :title-caption title)
+      (init object)
 	  (setf *default-surface* (create-surface *screen-width* *screen-height*)
 			*game-tick* 0
-			*render-tick* 0
-			*loops* 0
+            *loops* 0
 			*next-update-in-ms* (+ (get-tick-count) *ms-per-update*))
-	  (setf (frame-rate) 0)    
+	  (setf (frame-rate) 0)
 	  (gen-sdl-with-events))))

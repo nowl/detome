@@ -1,5 +1,22 @@
 (in-package #:detome)
 
+(defparameter *global-actor-list* nil)
+
+(defclass object ()
+  ((meta
+    :initform (make-hash-table) :accessor meta :type hash-table :documentation 
+    "A hashtable of artibrary key-values for this object.")
+   (name
+    :initform "" :initarg :name :accessor name :type simple-string :documentation
+    "The name of this object, used for identification.")))
+
+(defmacro get-meta (key object)
+  `(gethash ,key (slot-value ,object 'meta)))
+
+(defmacro set-meta (key value object)
+  `(setf (gethash ,key (slot-value ,object 'meta))
+         ,value))
+
 (defclass map-object (object)
   ((x 
     :initarg :x :accessor x :type fixnum :documentation 
@@ -38,3 +55,14 @@
    (r-energy :initarg :r-energy :accessor r-energy :type fixnum)
    (y-energy :initarg :y-energy :accessor y-energy :type fixnum))
   (:default-initargs :inv nil :level 1))
+
+(defmethod initialize-instance :after ((actor actor) &rest initargs &key)
+  (declare (ignore initargs))
+  (push actor *global-actor-list*))
+
+(defun map-actors (func)
+  (declare (function func))
+  (mapcar func *global-actor-list*))
+
+(defclass scenery (map-object)
+  ())

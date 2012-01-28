@@ -76,6 +76,7 @@
                 "green energy"
                 :energy
                 #'(lambda (obj owner)
+                    (declare (ignore obj))
                     (when (eq owner *player*)
                       (incf (g-energy *player*)))))
 
@@ -83,6 +84,7 @@
                 "blue energy"
                 :energy
                 #'(lambda (obj owner)
+                    (declare (ignore obj))
                     (when (eq owner *player*)
                       (incf (b-energy *player*)))))
 
@@ -90,6 +92,7 @@
                 "red energy"
                 :energy
                 #'(lambda (obj owner)
+                    (declare (ignore obj))
                     (when (eq owner *player*)
                       (incf (r-energy *player*)))))
 
@@ -97,5 +100,6 @@
                 "yellow energy"
                 :energy
                 #'(lambda (obj owner)
+                    (declare (ignore obj))
                     (when (eq owner *player*)
                       (incf (y-energy *player*)))))

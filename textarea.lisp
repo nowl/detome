@@ -19,17 +19,18 @@
   |#
   (funcall location-func (cons ttl (list (append `((:color ,sdl:*white*)) message-as-list)))))
 
-
+#|
 (make-object
  :name "message textarea updater"
  :update-cb #'(lambda (obj)
                 (multiple-value-setq (*message-area-strings* *message-area-buffer*)
                   (update-message-strings
-                   (second (black::update-cb-control obj))
+                   (second (bf::update-cb-control obj))
                    *message-area-buffer*
                    :rawtext *message-area-rawtext*))
                 (setf *message-area-rawtext* nil))
  :update-cb-control '(:seconds 0.1))
+|#
 
 (defparameter *message-area-strings* nil)
 

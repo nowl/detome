@@ -1,7 +1,3 @@
 (defpackage :detome
-  (:use #:cl 
-		#:black)
-  (:shadowing-import-from #:black 
-                          #:log
-                          #:remove)
+  (:use #:cl)
   (:export #:detome))

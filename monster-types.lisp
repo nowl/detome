@@ -8,29 +8,30 @@
 		(setf x new-x y new-y)))))
 
 (defmacro turn-helper (tt-move ttn-move &body body)
-  `(let ((ticks-till-next-move (get-meta :ttn-move obj))
-         (ticks-till-move (get-meta :tt-move obj)))
-     (cond ((null ticks-till-next-move)
-            (set-meta (:tt-move obj) ,tt-move)
-            (set-meta (:ttn-move obj) ,ttn-move))
-           ((>= ticks-till-next-move ticks-till-move)
-            ,@body
-            (set-meta (:tt-move obj) 0))
-           (t (set-meta (:ttn-move obj) (1+ ticks-till-next-move))))))
-
-(defgeneric random-walk-movement (obj)
-  (:method ((obj actor))
-    (turn-helper 2 1
-      (if (<= (distance *player* obj) 1)
-          (attack obj *player*)
-          (let ((x (- (random 3) 1))
-                (y (- (random 3) 1)))
-            (attempt-move-monster obj x y))))))
+  (with-gensyms (ticks-till-next-move ticks-till-move)
+    `(let ((,ticks-till-next-move (get-meta :ttn-move obj))
+           (,ticks-till-move (get-meta :tt-move obj)))
+       (cond ((null ,ticks-till-next-move)
+              (set-meta :tt-move ,tt-move obj)
+              (set-meta :ttn-move ,ttn-move obj))
+             ((>= ,ticks-till-next-move ,ticks-till-move)
+              ,@body
+              (set-meta :tt-move 0 obj))
+             (t (set-meta :ttn-move (1+ ,ticks-till-next-move) obj))))))
 
 (defgeneric distance (src dest)
   (:method ((src actor) (dest actor))
     (sqrt (+ (expt (- (x src) (x dest)) 2)
              (expt (- (y src) (y dest)) 2)))))
+
+(defun random-walk-movement (obj)
+  (declare (actor obj))
+  (turn-helper 2 1
+    (if (<= (distance *player* obj) 1)
+        (attack obj *player*)
+        (let ((x (- (random 3) 1))
+              (y (- (random 3) 1)))
+          (attempt-move-monster obj x y)))))
 
 (defun random-walk-movement-with-chase (obj)
   (turn-helper 2 1

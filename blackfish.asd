@@ -1,7 +1,7 @@
 ;;; -*- lisp -*-
 
-(defsystem black-engine
-  :description "The Black Engine"
+(defsystem blackfish
+  :description "The BlackFish Engine"
   :long-description ""
   :version "0.1"
   :author "John Process <esologic@gmail.com>"
@@ -9,25 +9,19 @@
   :depends-on ("lispbuilder-sdl"
                "lispbuilder-sdl-image")
   :components
-  ((:module "black"
+  ((:module "blackfish"
             :components
             ((:file "package")
              (:file "log")
-             (:file "generics")
-             (:file "config")
-             (:file "object")
-             (:file "object-manager")
-             (:file "game-state")
+             (:file "game")
              (:file "message")
-             (:file "image")
-             (:file "macros")
-             (:file "los")
-             (:file "main")
              (:module "misc"
                       :components
                       ((:file "mid-disp")
                        (:file "perlin")
-                       (:file "random"))
+                       (:file "random")
+                       (:file "los")
+                       (:file "image"))
                       :serial t))
             :serial t)))
   

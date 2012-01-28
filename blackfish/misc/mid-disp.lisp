@@ -1,6 +1,4 @@
-(in-package #:black)
-
-(export 'mid-displace)
+(in-package #:blackfish)
 
 (defun mod-round (num)
   (declare (float num))
@@ -17,33 +15,37 @@ highest integer."
 		  ((< new 0.0) 0.0)
 		  (t new))))
 
-(defun mid-displace-aux (x y width height v1 v2 v3 v4 roughness array)
+(defun mid-displace-aux (x y width height ul ur lr ll roughness array)
   (declare (fixnum x y)
-		   (single-float width height v1 v2 v3 v4 roughness)
+		   (single-float width height ul ur lr ll roughness)
 		   (simple-array array))
   (if (or (>= width 1) (>= height 1))
 	  (let* ((new-height (float (/ height 2)))
 			 (new-width (float (/ width 2)))
 			 (midpoint (rand-mid (+ new-width new-height)
 								 (float (apply #'+ -2 (array-dimensions array)))
-								 v1 v2 v3 v4
+								 ul ur lr ll
 								 roughness)))
-		(let ((e1 (/ (+ v1 v2) 2))
-			  (e2 (/ (+ v2 v3) 2))
-			  (e3 (/ (+ v3 v4) 2))
-			  (e4 (/ (+ v4 v1) 2)))
-		  (mid-displace-aux x y new-width new-height v1 e1 midpoint e4
+		(let ((et (/ (+ ul ur) 2))
+			  (er (/ (+ ur lr) 2))
+			  (eb (/ (+ lr ll) 2))
+			  (el (/ (+ ll ul) 2)))
+          ;; upper left rect
+		  (mid-displace-aux x y new-width new-height ul et midpoint el
 							roughness array)
+          ;; upper right rect
 		  (mid-displace-aux (mod-round (+ x new-width)) y new-width new-height
-							e1 v2 e2 midpoint roughness array)
+							et ur er midpoint roughness array)
+          ;; lower right rect
 		  (mid-displace-aux (mod-round (+ x new-width)) 
 							(mod-round (+ y new-height))
 							new-width new-height
-							midpoint e2 v3 e3 roughness array)
+							midpoint er lr eb roughness array)
+          ;; lower left rect
 		  (mid-displace-aux x (mod-round (+ y new-height)) new-width new-height
-							e4 midpoint e3 v4 roughness array)))
+							el midpoint eb ll roughness array)))
 	  (setf (aref array y x)
-			(/ (+ v1 v2 v3 v4) 4))))
+			(/ (+ ul ur lr ll) 4))))
 
 (defun random-normal (&optional (mean 0.0) (variance 1.0))
   (let ((s 1)
@@ -118,7 +120,7 @@ flexibility and desired behavior."
 				(setf (aref array h w)
 					  (funcall post-filter-func val))))))
   array)
-
+#|
 (defun pgm-out (filename array)
   "Outputs the array of floats to a PGM file"
   (let ((shades (1- (expt 2 16))))
@@ -132,3 +134,4 @@ flexibility and desired behavior."
 			 (format out "~%"))))))
 
 (pgm-out "test.pgm" (mid-displace 512 512 :roughness 5))
+|#

@@ -1,6 +1,8 @@
 (in-package #:detome)
 
 (defun build-random-cave (width height complexity dlevel)
+  (declare (ignore dlevel))
+
   ;(clear-intensity-map)
   (clear-monsters-from-level)
   (clear-scenery-from-level)
@@ -32,7 +34,7 @@
                 (push (list x y) floor-spaces))))
 
     ;; place random stairs down
-    (let ((stairs-down-loc (random-choice floor-spaces))
+    (let ((stairs-down-loc (bf:random-choice floor-spaces))
           (stairs-down-number (map-cell-number (gethash "stairs-down" *map-cells-by-name*))))
       (setf (aref *level* (second stairs-down-loc) (first stairs-down-loc))
             (list 5 stairs-down-number)))
@@ -41,7 +43,7 @@
     (clear-explored-map)
 
     ;; set player at a random spot along with the stairs up
-    (let ((player-loc (random-choice floor-spaces))
+    (let ((player-loc (bf:random-choice floor-spaces))
           (stairs-up-number (map-cell-number (gethash "stairs-up" *map-cells-by-name*))))
       (place-player (first player-loc) (second player-loc))
       (setf (aref *level* (second player-loc) (first player-loc))
@@ -50,6 +52,6 @@
     ;; randomly place some monsters
     (let ((num-monsters (+ 10 (random 50))))
       (dotimes (n num-monsters)
-        (let ((mon-loc (random-choice floor-spaces)))
+        (let ((mon-loc (bf:random-choice floor-spaces)))
           (place-random-monster 1 2 (first mon-loc) (second mon-loc)))))))
   

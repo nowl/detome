@@ -1,5 +1,9 @@
 -*- mode:org -*-
 
+#+STARTUP: showall indent
+
+* DONE left off on game.lisp
+* DONE integrate some of the new messaging code from lapis into detome
 * TODO dungeon generation
 * TODO draw out the other monster images
 * TODO made trader dynamics work

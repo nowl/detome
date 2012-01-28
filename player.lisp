@@ -65,8 +65,8 @@
 
 (defun draw-player ()  
   (multiple-value-bind (x y) (get-screen-pos-of *player*)
-    (sdl:draw-surface-at-* (get-image "player-front") x y)))
-
+    (sdl:draw-surface-at-* (bf:get-image "player-front") x y)))
+#|
 (make-object
  :name "health renderer"
  :render-level "hud"
@@ -208,5 +208,5 @@
                                          :font *larger-font*)))
 
 
-
+|#
 

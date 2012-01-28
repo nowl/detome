@@ -1,6 +1,4 @@
-(in-package #:black)
-
-(export '(line-of-sight))
+(in-package #:blackfish)
 
 ;;;; modified ray casting method for line of sight
 

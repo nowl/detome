@@ -63,7 +63,7 @@
 (defun update-intensity-map (x y intensity)
   (clear-intensity-map)
   (set-in-intensity-map x y intensity)
-  (let ((sights (line-of-sight x y
+  (let ((sights (bf:line-of-sight x y
                                (ecase *level-type*
                                  (:predefined (1- *level-width*))
                                  (:perlin (+ x 100)))
@@ -94,7 +94,7 @@
     (let ((images (mapcar #'(lambda (mp) (map-cell-image (gethash mp *map-cells-by-number*)))
                           (get-map-points x y))))
       (loop for image in images collecting           
-           (get-image (etypecase image
+           (bf:get-image (etypecase image
                         (simple-string image)
                         (function (funcall image x y)))
                       :darken darken-amount)))))
@@ -141,13 +141,13 @@
                                           (* (- y y-start) 32)))))))
 
 (defun clear-items-from-level ()
-  (dolist (item *items-in-level*)
-    (remove item *play-game-state*))
+;;  (dolist (item *items-in-level*)
+;;    (remove item *play-game-state*))
   (setf *items-in-level* nil))
 
 (defun clear-scenery-from-level ()
-  (dolist (scenery *scenery-in-level*)
-    (remove scenery *play-game-state*))
+;;  (dolist (scenery *scenery-in-level*)
+;;    (remove scenery *play-game-state*))
   (setf *scenery-in-level* nil))
 
 (defun draw-items ()
@@ -156,7 +156,7 @@
       (let ((darken-amount (clip (- 1 (find-in-intensity-map (x item) (y item)))
                                  0.0 1.0)))
         (when (< darken-amount 1.0)
-          (sdl:draw-surface-at-* (get-image (image-name (item-type item)) :darken darken-amount) x y))))))
+          (sdl:draw-surface-at-* (bf:get-image (image-name (item-type item)) :darken darken-amount) x y))))))
 
 
 ;; determines if a specific spot on the map is walkable by the player
@@ -171,7 +171,7 @@
        (unless (map-cell-walkable (gethash cell *map-cells-by-number*))
          (return-from walkable (values nil :scenery))))
   t)
-
+#|
 (make-object
  :name "environment builder"
  :update-cb #'(lambda (obj)
@@ -187,3 +187,29 @@
                                    (update-intensity-map (x *player*) (y *player*) 1.0))))))
  :update-cb-control `(:seconds ,*day-night-cycle-in-seconds*))
  ;;:update-cb-control :none);; `(:seconds ,*day-night-cycle-in-seconds*))
+|#
+
+
+;; The map window should stay relatively centered on the player unless
+;; we are near an edge in which case the map window fills the view.
+(defun move-map-window-if-needed ()
+  (let ((window-width (nth 2 *map-window*))
+        (window-height (nth 3 *map-window*)))
+
+    ;; handle x direction
+    (cond ((and (eq *level-type* :predefined) 
+                (< (x *player*) (/ window-width 2)))
+           (setf (nth 0 *map-window*) 0))
+          ((and (eq *level-type* :predefined)
+                (> (x *player*) (- *level-width* (/ window-width 2))))
+           (setf (nth 0 *map-window*) (- *level-width* window-width)))
+          (t (setf (nth 0 *map-window*) (- (x *player*) (/ window-width 2)))))
+
+    ;; handle y direction
+    (cond ((and (eq *level-type* :predefined)
+                (< (y *player*) (/ window-height 2)))
+           (setf (nth 1 *map-window*) 0))
+          ((and (eq *level-type* :predefined)
+                (> (y *player*) (- *level-height* (/ window-height 2))))
+           (setf (nth 1 *map-window*) (- *level-height* window-height)))
+          (t (setf (nth 1 *map-window*) (- (y *player*) (/ window-height 2)))))))

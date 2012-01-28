@@ -1,5 +1,9 @@
 (in-package #:detome)
 
+(defmacro with-gensyms (syms &body body)
+  `(let ,(loop for s in syms collect `(,s (gensym)))
+     ,@body))
+
 (defmacro set-predefined-level (map)
   (let ((h (length map))
         (w (length (car map))))
@@ -57,13 +61,13 @@
        
 (defmacro make-scenery (image x y)
   (with-gensyms (obj)
-    `(let ((,obj (make-object :name (symbol-name (gensym ,image)))))
+    `(let ((,obj (make-instance 'scenery :name (symbol-name (gensym ,image)))))
        (setf (aref *level* ,y ,x)
              (append (aref *level* ,y ,x)
                      (list (map-cell-number (gethash ,image *map-cells-by-name*)))))
-       (set-meta (:image ,obj) ,image)
-       (set-meta (:x ,obj) ,x)
-       (set-meta (:y ,obj) ,y)
+       (set-meta :image ,image ,obj)
+       (set-meta :x ,x ,obj)
+       (set-meta :y ,y ,obj)
        (push ,obj *scenery-in-level*))))
 
 (defmacro place-player (x y)

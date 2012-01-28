@@ -1,12 +1,9 @@
-(in-package #:black)
-
-(export '(perlin2d
-          *seed*))
+(in-package #:blackfish)
 
 (declaim (optimize (speed 3) (safety 0) (debug 0)))
 
-(defparameter *seed* 0)
-(declaim (fixnum *seed*))
+(defparameter *perlin-seed* 0)
+(declaim (fixnum *perlin-seed*))
 
 ;; table of 256 randomly generated noise values between 0 and 255
 (defparameter *noise-hash*
@@ -25,11 +22,11 @@
 (declaim ((simple-vector 256) *noise-hash*))
 
 ;; A hash that returns a unique value based on the *noise-hash* and
-;; the *seed* value for each x and y.
+;; the *perlin-seed* value for each x and y.
 (declaim (inline noise2))
 (defun noise2 (x y)
   (declare (fixnum x y))
-  (let ((tmp (svref *noise-hash* (mod (+ y *seed*) 256))))
+  (let ((tmp (svref *noise-hash* (mod (+ y *perlin-seed*) 256))))
     (declare (fixnum tmp))
     (svref *noise-hash* (mod (+ tmp x) 256))))
 

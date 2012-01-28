@@ -1,15 +1,12 @@
-(in-package #:black)
-
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (shadow '(log)))
-
-(export '(log set-log-level))
+(in-package #:blackfish)
 
 (defparameter *log-levels*
   '(:error
 	:warning
 	:info
 	:debug))
+
+(defparameter *log-types-to-print* *log-levels*)
 
 (defun set-log-level (level)
   (setf *log-types-to-print*

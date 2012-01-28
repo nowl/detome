@@ -1,5 +1,7 @@
 (in-package #:detome)
 
+(defparameter *game-ticks-per-second* 15)
+
 (defparameter *map-window* '(0 0 32 22)
   "The viewport of the map on the screen in terms of tiles. The
   ordering goes x and y location of the upper left corner of the map
@@ -25,36 +27,36 @@
 ;; (defparameter *default-message-textarea-window*
 ;;   (list (* 32 (nth 2 *map-window*))
 ;;         0
-;;         (- *screen-width* (* 32 (nth 2 *map-window*)))
-;;         *screen-height*)
+;;         (- bf:*screen-width* (* 32 (nth 2 *map-window*)))
+;;         bf:*screen-height*)
 ;;   "This defines the rightmost region of the screen where text messages may appear.")
 
 (defparameter *default-message-textarea-window*
   (list (+ (* 32 18))
-        (+ *screen-height* -64 2)
-        (- *screen-width* (+ (* 32 18)))
-        (- *screen-height* (+ *screen-height* -64 2))))
+        (+ bf:*screen-height* -64 2)
+        (- bf:*screen-width* (+ (* 32 18)))
+        (- bf:*screen-height* (+ bf:*screen-height* -64 2))))
 
 (defparameter *draw-textarea-window* t)
 ;;(defparameter *draw-message-exclamation* nil)
 ;;(defparameter *seconds-to-remove-message-notification* 3)
 
-(defparameter *health-placement* `(8 ,(+ *screen-height* -64 2) ,(* 32 12)))
-(defparameter *attack-placement* `(8 ,(+ *screen-height* -64 16 2 2)))
-(defparameter *damage-placement* `(,(+ (* 32 5)) ,(+ *screen-height* -64 16 2 2)))
-(defparameter *defense-placement* `(,(+ (* 32 10)) ,(+ *screen-height* -64 16 2 2)))
-(defparameter *provision-placement* `(8 ,(+ *screen-height* -64 32 2 2 2)))
-(defparameter *location-placement* `(,(+ (* 32 5)) ,(+ *screen-height* -64 32 2 2 2)))
-(defparameter *g-energy-placement* `(,(+ (* 32 14)) ,(+ *screen-height* -64 2)))
-(defparameter *b-energy-placement* `(,(+ (* 32 16)) ,(+ *screen-height* -64 2)))
-(defparameter *r-energy-placement* `(,(+ (* 32 14)) ,(+ *screen-height* -64 16 2 2)))
-(defparameter *y-energy-placement* `(,(+ (* 32 16)) ,(+ *screen-height* -64 16 2 2)))
+(defparameter *health-placement* `(8 ,(+ bf:*screen-height* -64 2) ,(* 32 12)))
+(defparameter *attack-placement* `(8 ,(+ bf:*screen-height* -64 16 2 2)))
+(defparameter *damage-placement* `(,(+ (* 32 5)) ,(+ bf:*screen-height* -64 16 2 2)))
+(defparameter *defense-placement* `(,(+ (* 32 10)) ,(+ bf:*screen-height* -64 16 2 2)))
+(defparameter *provision-placement* `(8 ,(+ bf:*screen-height* -64 32 2 2 2)))
+(defparameter *location-placement* `(,(+ (* 32 5)) ,(+ bf:*screen-height* -64 32 2 2 2)))
+(defparameter *g-energy-placement* `(,(+ (* 32 14)) ,(+ bf:*screen-height* -64 2)))
+(defparameter *b-energy-placement* `(,(+ (* 32 16)) ,(+ bf:*screen-height* -64 2)))
+(defparameter *r-energy-placement* `(,(+ (* 32 14)) ,(+ bf:*screen-height* -64 16 2 2)))
+(defparameter *y-energy-placement* `(,(+ (* 32 16)) ,(+ bf:*screen-height* -64 16 2 2)))
 
 ;; (defparameter *default-message-textarea-window*
 ;;   (list 0
 ;;         (* 32 (nth 3 *map-window*))
-;;         *screen-width*
-;;         (- *screen-height* (* 32 (nth 3 *map-window*))))
+;;         bf:*screen-width*
+;;         (- bf:*screen-height* (* 32 (nth 3 *map-window*))))
 ;;   "This defines the rightmost region of the screen where text messages may appear.")
 
 ;; fonts
@@ -101,12 +103,7 @@
 
 ;; logging
 
-(set-log-level :info)
-
-;; game states
-
-(defparameter *play-game-state* (make-instance 'game-state))
-(switch *play-game-state*)
+(bf:set-log-level :info)
 
 ;; traders
 

@@ -1,8 +1,7 @@
-(in-package #:black)
+(in-package #:blackfish)
 
-(export '(get-image
-          define-image
-          clear-image-caches))
+(defparameter *image-cache* (make-hash-table :test #'equal))
+(defparameter *tile-cache* (make-hash-table :test #'equal))
 
 (defun clear-image-caches ()
   (setf *image-cache* (make-hash-table :test #'equal))

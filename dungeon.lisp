@@ -20,7 +20,7 @@
             ((and i j) (list i j))
             (t (error t "must pass in a valid location, received :i ~a, :j ~a, :loc ~a"
                       i j loc)))
-    (log :debug "building a ~a at ~a,~a" type y x)
+    (bf:log :debug "building a ~a at ~a,~a" type y x)
 
     ;; check for existing wall and if so then remove from *walls*
     (when (eq (aref dungeon y x) :wall)
@@ -55,7 +55,7 @@
 (defun select-random-wall (dungeon)
   (let* ((wall-num (random (length *walls*)))
          (wall (nth wall-num *walls*)))
-    (log :debug "selecting wall at ~a" wall)
+    (bf:log :debug "selecting wall at ~a" wall)
     (setf *walls* (delete wall *walls* :test #'equal :start wall-num))
     (add-tile dungeon nil :loc wall)
     wall))
@@ -68,7 +68,7 @@
       (let ((points-xy (if (and (= s-i e-i)
                                 (= s-j e-j))
                            (list (list s-j s-i))
-                           (black::bresenham s-j s-i e-j e-i))))
+                           (bf::bresenham s-j s-i e-j e-i))))
         ;; first check if each is nil
         (loop for point-xy in points-xy do
              (let* ((i (second point-xy))
@@ -116,7 +116,7 @@
         (j (second loc))          
         (directions-to-check '(:north :south :east :west)))
     (loop while (not (null directions-to-check)) do
-         (let ((direction (random-choice directions-to-check)))
+         (let ((direction (bf:random-choice directions-to-check)))
            (setf directions-to-check (cl:remove direction directions-to-check))
            (ecase direction
              (:north (when (null (aref dungeon (1- i) j))
@@ -137,14 +137,14 @@
 (defun generate-ortho-hallway (dungeon start)
   (destructuring-bind (s-i s-j) start
     (multiple-value-bind (dir length-abs) (find-random-direction-and-length dungeon start)
-      (log :debug "trying to build hallway from ~a" start)
+      (bf:log :debug "trying to build hallway from ~a" start)
       (if (or (null dir) (= 0 length-abs))
           (progn
-            (log :debug "failed to build hallway")
+            (bf:log :debug "failed to build hallway")
             (add-tile dungeon :wall :loc start))
           (progn
             (let ((length (1+ (random length-abs))))
-              (log :debug "building hallway ~a for ~a tiles" dir length)
+              (bf:log :debug "building hallway ~a for ~a tiles" dir length)
               ;; build the actual hallway      
               (ecase dir
                 (:north (loop for i below length do
@@ -159,8 +159,8 @@
 
 (defun generate-random-asset (dungeon)
   (let ((loc (select-random-wall dungeon))
-        (type (random-weighted-choice *build-types*)))
-    (log :debug "trying to build ~a at ~a" type loc)
+        (type (bf:random-weighted-choice *build-types*)))
+    (bf:log :debug "trying to build ~a at ~a" type loc)
     (ecase type
       (room (add-tile dungeon :wall :loc loc))
       (floor-space (build-with-surrounding-when-null dungeon (first loc) (second loc) :floor :wall))
@@ -190,6 +190,7 @@
 (defun pretty-print (dungeon)
   (array-map dungeon
              #'(lambda (tile i j)
+                 (declare (ignore i j))
                  (case tile
                    (:wall 1)
                    (:floor 2)

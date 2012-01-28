@@ -26,7 +26,7 @@
   :attenuation 0.01
   :walkable t
   :image #'(lambda (x y)
-             (case (floor (* 2 (perlin2d x y 1 4)))
+             (case (floor (* 2 (bf:perlin2d x y 1 4)))
                (0 "plain")
                (t "plain-2"))))
 (define-map-cell 1
@@ -54,7 +54,7 @@
   :attenuation 0.1
   :walkable t
   :image #'(lambda (x y)
-             (case (floor (* 2 (perlin2d x y 1.1 4)))
+             (case (floor (* 2 (bf:perlin2d x y 1.1 4)))
                (0 "tree-1")
                (t "tree-2"))))
 (define-map-cell 9

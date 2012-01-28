@@ -12,7 +12,7 @@
   ttl
   formatted-strings)
 
-(defun make-hover-message (x y width color alpha message-as-list &key mover ttl (draw-rect t) fit-height (height black::*screen-height*))
+(defun make-hover-message (x y width color alpha message-as-list &key mover ttl (draw-rect t) fit-height (height bf::*screen-height*))
   (let ((raw-message (list (cons 1 (list (append `((:color ,sdl:*white*)) message-as-list)))))
         strings
         buffer)
@@ -65,7 +65,7 @@
          (let ((rect-surf (sdl:create-surface (hover-width hover) (hover-height hover) :alpha (hover-alpha hover))))
            (sdl:flood-fill-* 0 0 :surface rect-surf :color (hover-box-color hover))
            (sdl:draw-surface-at-* rect-surf (hover-x hover) (hover-y hover))))))
-
+#|
 (make-object
  :name "hover mover updater"
  :update-cb #'(lambda (obj)
@@ -94,3 +94,4 @@
                   (dolist (hover hovers-to-remove)
                     (setf *hover-messages* (delete hover *hover-messages* :test #'eq)))))
  :update-cb-control '(:ticks 1))
+|#
