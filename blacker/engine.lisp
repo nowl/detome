@@ -20,8 +20,8 @@
     "This is a function which takes a message as an argument. It is
     called on the component when one of the valid message types is
     broadcast.")
-   (responder-messages
-    :initarg :responder-messages :initform nil :accessor responder-messages :type list
+   (message-types
+    :initarg :message-types :initform nil :accessor message-types :type list
     :documentation
     "A list of the valid message response types accepted by this
     component.")))
@@ -31,10 +31,6 @@
     :initarg :sender :accessor sender :type entity
     :documentation
     "The specific entity type that has sent this message.")
-   (owner
-    :initarg :owner :accessor owner :type entity
-    :documentation
-    "The owner of the respective component receiving this message.")
    (type
     :initarg :type :accessor type :type symbol
     :documentation
@@ -58,23 +54,56 @@
 (defparameter *name-component* (make-hash-table :test #'equal)
   "Reverse name lookup for components.")
 
+(defparameter *messages* nil
+  "A list of all messages waiting to be processed.")
+
 ;;; public engine functions
+
+;; looks up an entity by name
+(defun name-entity (name)
+  (gethash name *name-entity*))
 
 ;; name: a string naming the entity
 ;; components: a list of component names to add to the entity
 (defun make-entity (name &optional components)
   (declare (list components))
   (multiple-value-bind (* exist) (gethash name *name-entity*)
-    (when exist (error "trying to create an entity of the same name ~a" name)))
+    (when exist (error "trying to create a duplicate entity ~a" name)))
   (let ((entity (make-instance 'entity)))
-    (push entity *entities*)
-    (setf (gethash name *name-entity*) entity)
     
     ;; add components to entity
     (loop for comp in components do
          (multiple-value-bind (comp-obj exist) (gethash comp *name-component*)
            (unless exist (error "trying to add a component that does not exist ~a" comp))
-           (push comp-obj (components entity))))))
-         
+           (push comp-obj (components entity))))
+
+    ;; add entity to globals
+    (push entity *entities*)
+    (setf (gethash name *name-entity*) entity)))         
        
-;(defun make-component (name 
+;; name: a string naming the component
+;; message-types: a list of symbols of the message types this
+;;   component will respond to
+;; responder: a function taking a message object and an owner entity
+;;   that is called during a message broadcast
+(defun make-component (name message-types responder)
+  (declare (list message-types)
+           (function responder))
+  (multiple-value-bind (* exist) (gethash name *name-component*)
+    (when exist (error "trying to create a duplicate component ~a" name)))
+  (let ((component (make-instance 'component
+                                  :responder responder
+                                  :message-types message-types)))
+    (setf (gethash name *name-component*) component)))
+
+;;; internal functions
+
+;; message processing loop
+(defun process-messages ()
+  (loop for message in *messages* do
+       (loop for entity in *entities* do
+            (loop for component in (components entity) do
+                 (when (member (type message) (message-types component))
+                   (funcall (responder component) message entity)))))
+  (setf *messages* nil))
+                   
