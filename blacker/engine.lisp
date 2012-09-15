@@ -39,9 +39,6 @@
 
 ;;; global engine variables
 
-(defparameter *name-entity* (make-hash-table :test #'equal)
-  "Reverse name lookup for entities.")
-
 (defparameter *name-component* (make-hash-table :test #'equal)
   "Reverse name lookup for components.")
 
@@ -53,27 +50,29 @@
   "A list of all messages waiting to be processed.")
 
 ;;; public engine functions
+ 
+(defun remove-entity (entity)
+  (declare (entity entity))
+  ;; remove entities from component's entity lists
+  (loop for components being the hash-values of *responder-type-component-list* do
+       (loop for component in components do
+            (setf (entities component)
+                  (delete entity (entities component))))))
 
-;; looks up an entity by name
-(defun name-entity (name)
-  (gethash name *name-entity*))
+(defun add-component-to-entity (component entity)
+  (declare (simple-string component)
+           (entity entity))
+  (multiple-value-bind (comp-obj exist) (gethash component *name-component*)
+    (unless exist (error "trying to add a component that does not exist ~a" component))
+    (push entity (entities comp-obj))))
 
-;; name: a string naming the entity
 ;; components: a list of component names to add to the entity
-(defun make-entity (name &optional components)
+(defun make-entity (&optional components)
   (declare (list components))
-  (multiple-value-bind (* exist) (gethash name *name-entity*)
-    (when exist (error "trying to create a duplicate entity ~a" name)))
   (let ((entity (make-instance 'entity)))
-    
     ;; add entity to each component
-    (loop for comp in components do
-         (multiple-value-bind (comp-obj exist) (gethash comp *name-component*)
-           (unless exist (error "trying to add a component that does not exist ~a" comp))
-           (push entity (entities comp-obj))))
-
-    ;; add entity to globals
-    (setf (gethash name *name-entity*) entity)))
+    (loop for comp in components do (add-component-to-entity comp entity))         
+    entity))
        
 ;; name: a string naming the component
 ;; message-types: a list of symbols of the message types this
@@ -117,4 +116,3 @@
 (defun process-messages ()
   (loop for message in *messages* do (process-message message))
   (setf *messages* nil))
-                
