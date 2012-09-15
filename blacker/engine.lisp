@@ -116,3 +116,13 @@
 (defun process-messages ()
   (loop for message in *messages* do (process-message message))
   (setf *messages* nil))
+
+#|
+(set-dispatch-macro-character #\# #\m
+                              #'(lambda(s c n)
+                                  (declare (ignore c n))
+                                  (let ((list (read s nil nil t)))
+                                    `(send-message ,@list))))
+
+#m(:player-move '(1 2 3 4) nil)
+|#
