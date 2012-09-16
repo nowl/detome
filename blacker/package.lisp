@@ -1,4 +1,5 @@
 (defpackage #:blacker
-  (:use #:cl)
+  (:use #:cl
+        #:lispbuilder-sdl)
   (:shadow #:log
            #:type))

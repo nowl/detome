@@ -12,5 +12,7 @@
   :components
   ((:file "package")
    (:file "log")
-   (:file "engine"))
+   (:file "engine")
+   (:file "game")
+   (:file "image"))
   :serial t)
