@@ -1,10 +1,22 @@
-(in-package #:blacker)
+(in-package :blacker)
+
+(export '(meta
+          responder
+          entities
+          sender
+          type
+          payload
+          remove-entity
+          add-component-to-entity
+          make-entity
+          make-component
+          clear-entities-from-comp))
 
 ;;; definitions of entities, components, messages, ...
 
 (defclass entity ()
   ((meta
-    :initform (make-hash-table) :accessor meta :type hash-table
+    :initform (make-hash-table :test #'equal) :accessor meta :type hash-table
     :documentation
     "Arbitrary metadata stored in this entity for use by the
     components.")))
@@ -73,7 +85,22 @@
     ;; add entity to each component
     (loop for comp in components do (add-component-to-entity comp entity))         
     entity))
-       
+
+(defun add-component-to-responder-types (component message-types)
+  (loop for message-type in message-types do
+       (multiple-value-bind (components exist) 
+           (gethash message-type *responder-type-component-list*)
+         (setf (gethash message-type *responder-type-component-list*)
+               (if exist
+                   (cons component components)
+                   (list component))))))
+
+(defun remove-component-from-responder-types (component)
+  (loop for message symbol being the hash-keys of *responder-type-component-list* using (hash-value components) do
+       (when (member component components)
+         (setf (gethash message *responder-type-component-list*)
+               (delete component components)))))
+
 ;; name: a string naming the component
 ;; message-types: a list of symbols of the message types this
 ;;   component will respond to
@@ -82,19 +109,23 @@
 (defun make-component (name message-types responder)
   (declare (list message-types)
            (function responder))
-  (multiple-value-bind (* exist) (gethash name *name-component*)
-    (when exist (error "trying to create a duplicate component ~a" name)))
-  (let ((component (make-instance 'component
-                                  :responder responder)))
-    ;; add to globals
-    (setf (gethash name *name-component*) component)
-    (loop for message-type in message-types do
-         (multiple-value-bind (components exist) 
-             (gethash message-type *responder-type-component-list*)
-           (setf (gethash message-type *responder-type-component-list*)
-                 (if exist
-                     (cons component components)
-                     (list component)))))))
+    (multiple-value-bind (existing-comp exist) (gethash name *name-component*)
+      (if exist
+          (progn
+            ;;(warn "trying to create a duplicate component ~a, modifying existing" name)
+            (setf (responder existing-comp) responder)
+            (remove-component-from-responder-types existing-comp)
+            (add-component-to-responder-types existing-comp message-types)
+            existing-comp)
+          (let ((new-comp (make-instance 'component :responder responder)))
+            (setf (gethash name *name-component*) new-comp)
+            (add-component-to-responder-types new-comp message-types)
+            new-comp))))
+
+(defun clear-entities-from-comp (component)
+  (declare (simple-string component))
+  (let ((comp (gethash component *name-component*)))
+    (setf (entities comp) nil)))
 
 (defun send-message (type payload sender &optional (delivery-type :sync))
   (declare (symbol type delivery-type))
@@ -103,6 +134,11 @@
     (ecase delivery-type
       (:async (process-message message))
       (:sync (push message *messages*)))))
+
+(defmacro get-meta (entity key)
+  `(gethash ,key (meta ,entity)))
+(defmacro set-meta (entity key value)
+  `(setf (gethash ,key (meta ,entity)) ,value))
 
 ;;; internal functions
 
