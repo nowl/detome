@@ -15,7 +15,7 @@
 
 (defclass entity ()
   ((meta
-    :initform (make-hash-table) :accessor meta :type hash-table
+    :initform (make-hash-table :test #'equal) :accessor meta :type hash-table
     :documentation
     "Arbitrary metadata stored in this entity for use by the
     components.")))
