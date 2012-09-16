@@ -9,7 +9,8 @@
           remove-entity
           add-component-to-entity
           make-entity
-          make-component))
+          make-component
+          clear-entities-from-comp))
 
 ;;; definitions of entities, components, messages, ...
 
@@ -120,7 +121,12 @@
             (setf (gethash name *name-component*) new-comp)
             (add-component-to-responder-types new-comp message-types)
             new-comp))))
-    
+
+(defun clear-entities-from-comp (component)
+  (declare (simple-string component))
+  (let ((comp (gethash component *name-component*)))
+    (setf (entities comp) nil)))
+
 (defun send-message (type payload sender &optional (delivery-type :sync))
   (declare (symbol type delivery-type))
   (let ((message
