@@ -16,11 +16,12 @@
   (coerce (truncate (system-ticks)) 'fixnum))
 
 (defun main-render (interpolation)
-  (fill-surface *black*)
+  ;;(fill-surface *black*)
   (send-message :system-render interpolation *internal-entity* :async)
-  (update-display *default-surface*)
-  (blit-surface *default-surface* *default-display*)
-  (update-display))
+  ;;(update-display *default-surface*)
+  ;;(blit-surface *default-surface* *default-display*)
+  ;;(update-display))
+  )
 
 (defun main-update ()
   (incf *game-tick*)
@@ -81,13 +82,43 @@
         *screen-height* init-height
         *ms-per-update* (float ms-per-update)
         *max-frame-skip* max-frame-skip)
-  (let ((total-flags (logior sdl-flags sdl-sw-surface)))
+  (let ((total-flags (logior sdl-flags sdl-opengl))) ;;sdl-sw-surface)))
 	(with-init ()
 	  (window *screen-width* *screen-height* :flags total-flags :title-caption title)
+
+      (setf cl-opengl-bindings:*gl-get-proc-address* #'sdl-cffi::sdl-gl-get-proc-address)
+
+      (sdl:set-gl-attribute :sdl-gl-red-size 5)
+      (sdl:set-gl-attribute :sdl-gl-green-size 5)
+      (sdl:set-gl-attribute :sdl-gl-blue-size 5)
+      (sdl:set-gl-attribute :sdl-gl-doublebuffer 1)
+
+      (%gl:disable :depth-test)
+      (%gl:enable :texture-2d)
+      
       (send-message :system-init nil *internal-entity* :async)
 	  (setf *default-surface* (create-surface *screen-width* *screen-height*)
 			*game-tick* 0
             *loops* 0
 			*next-update-in-ms* (+ (get-tick-count) *ms-per-update*))
+
+      (%gl:clear-color 0 0 0 0)
+      (%gl:viewport 0 0 *screen-width* *screen-height*)
+      (%gl:matrix-mode :projection)
+      (%gl:load-identity)
+      (%gl:ortho 0 *screen-width* *screen-height* 0 0 1)
+
+      (%gl:color-3f 0.0 0.0 1.0)
+      (%gl:begin :quads)
+      (%gl:vertex-2f 0.0 0.0)
+      (%gl:vertex-2f 100.0 10.0)
+      (%gl:vertex-2f 100.0 100.0)
+      (%gl:vertex-2f 0.0 100.0)
+      (%gl:end)
+
+      (%gl:flush)
+
+      (update-display)
+
 	  (setf (frame-rate) 0)
 	  (gen-sdl-with-events))))
