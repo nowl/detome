@@ -7,6 +7,37 @@
   (setf *image-cache* (make-hash-table :test #'equal))
   (setf *tile-cache* (make-hash-table :test #'equal)))
 
+(defun surface-to-texture (image)
+  ;; make sure width and height are powers of two
+  (assert (= (logand (width image) (1- (width image))) 0))
+  (assert (= (logand (height image) (1- (height image))) 0))
+
+  (let ((texture (car (gl:gen-textures 1))))
+    (gl:bind-texture :texture-2d texture)
+    (gl:tex-parameter :texture-2d :texture-min-filter :linear)
+    
+    (with-pixel (pix (sdl:fp image))
+      ;; we should probably be a bit more intelligent about this, but this
+      ;; handles some common cases
+      (let ((texture-format (ecase (sdl-base::pixel-bpp pix)
+                              (3 (if (= (r-mask image) #xff)
+                                     :rgb
+                                     :bgr))
+                              (4 (if (= (r-mask image) #xff)
+                                     :rgba
+                                     :bgra)))))
+        ;; we should also handle this properly, by adjusting the
+        ;; settings of gl:pixel-store
+        (assert (and (= (sdl-base::pixel-pitch pix)
+                        (* (sdl:width image) (sdl-base::pixel-bpp pix)))
+                     (zerop (rem (sdl-base::pixel-pitch pix) 4))))
+        (gl:tex-image-2d :texture-2d 0 :rgba
+                         (sdl:width image) (sdl:height image)
+                         0
+                         texture-format
+                         :unsigned-byte (sdl-base::pixel-data pix))))
+    texture))
+
 (defun define-image (name path clipping-rectangle)
   (declare (simple-string name path)
            ((cons fixnum (cons fixnum (cons fixnum (cons fixnum)))) clipping-rectangle))
@@ -15,13 +46,13 @@
       (setf image (sdl-image:load-image path)
             (gethash name *image-cache*) image))
     (sdl:set-cell-* (first clipping-rectangle)
-		    (second clipping-rectangle)
-		    (third clipping-rectangle)
-		    (fourth clipping-rectangle)
-		    :surface image)
-    (let ((clipped-image (sdl:create-surface (width image) (height image) :pixel-alpha t)))
+                    (second clipping-rectangle)
+                    (third clipping-rectangle)
+                    (fourth clipping-rectangle)
+                    :surface image)
+    (let ((clipped-image (sdl:create-surface (third clipping-rectangle) (fourth clipping-rectangle) :pixel-alpha t)))
       (blit-surface image clipped-image)
-      (setf (gethash name *tile-cache*) clipped-image))))
+      (setf (gethash name *tile-cache*) (surface-to-texture clipped-image)))))
 
 (defun darken-surface (surface amount)
   (declare (sdl:surface surface)
@@ -46,12 +77,4 @@
 (defun get-image (name &key (darken 0.0))
   (declare (simple-string name)
            (short-float darken))
-  (let* ((cached-name (format nil "~a-~,1f" name darken))
-         (image-orig (gethash name *tile-cache*))
-         (mod-image (gethash cached-name *tile-cache*)))
-    (unless image-orig
-      (error "Unknown image name \"~a\"" name))
-    (unless mod-image
-      (setf mod-image (darken-surface image-orig darken)
-        	(gethash cached-name *tile-cache*) mod-image))
-    mod-image))
+  (gethash name *tile-cache*))

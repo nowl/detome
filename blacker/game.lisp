@@ -16,12 +16,9 @@
   (coerce (truncate (system-ticks)) 'fixnum))
 
 (defun main-render (interpolation)
-  ;;(fill-surface *black*)
+  (gl:clear :color-buffer-bit)
   (send-message :system-render interpolation *internal-entity* :async)
-  ;;(update-display *default-surface*)
-  ;;(blit-surface *default-surface* *default-display*)
-  ;;(update-display))
-  )
+  (update-display))
 
 (defun main-update ()
   (incf *game-tick*)
@@ -88,37 +85,28 @@
 
       (setf cl-opengl-bindings:*gl-get-proc-address* #'sdl-cffi::sdl-gl-get-proc-address)
 
-      (sdl:set-gl-attribute :sdl-gl-red-size 5)
-      (sdl:set-gl-attribute :sdl-gl-green-size 5)
-      (sdl:set-gl-attribute :sdl-gl-blue-size 5)
+      ;;(sdl:set-gl-attribute :sdl-gl-red-size 5)
+      ;;(sdl:set-gl-attribute :sdl-gl-green-size 5)
+      ;;(sdl:set-gl-attribute :sdl-gl-blue-size 5)
       (sdl:set-gl-attribute :sdl-gl-doublebuffer 1)
 
-      (%gl:disable :depth-test)
-      (%gl:enable :texture-2d)
-      
-      (send-message :system-init nil *internal-entity* :async)
+      ;;(gl:disable :depth-test)
+      ;;(gl:enable :texture-2d)
+
 	  (setf *default-surface* (create-surface *screen-width* *screen-height*)
 			*game-tick* 0
             *loops* 0
 			*next-update-in-ms* (+ (get-tick-count) *ms-per-update*))
 
-      (%gl:clear-color 0 0 0 0)
-      (%gl:viewport 0 0 *screen-width* *screen-height*)
-      (%gl:matrix-mode :projection)
-      (%gl:load-identity)
-      (%gl:ortho 0 *screen-width* *screen-height* 0 0 1)
+      (gl:clear-color 0 0 0 0)
+      (gl:viewport 0 0 *screen-width* *screen-height*)
+      (gl:matrix-mode :projection)
+      (gl:load-identity)
+      (gl:ortho 0 *screen-width* *screen-height* 0 0 1)
+      (gl:matrix-mode :modelview)
+      (gl:load-identity)
 
-      (%gl:color-3f 0.0 0.0 1.0)
-      (%gl:begin :quads)
-      (%gl:vertex-2f 0.0 0.0)
-      (%gl:vertex-2f 100.0 10.0)
-      (%gl:vertex-2f 100.0 100.0)
-      (%gl:vertex-2f 0.0 100.0)
-      (%gl:end)
-
-      (%gl:flush)
-
-      (update-display)
+      (send-message :system-init nil *internal-entity* :async)
 
 	  (setf (frame-rate) 0)
 	  (gen-sdl-with-events))))
