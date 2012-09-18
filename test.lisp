@@ -16,7 +16,17 @@
         (let ((w (second (cdr (payload message))))
               (h (fourth (cdr (payload message)))))
           (setf *screen-width* w *screen-height* h)
-          (setup-screen))))))
+          (setup-screen)))
+       ((and (eql (car (payload message)) :mouse-button-up-event)
+             (= (second (member :button (payload message))) 5))
+        (destructuring-bind (left right bottom top) *world-view*
+          (setf *world-view* (list left (* right 1.01) (* bottom 1.01) top))
+          (set-world-view)))
+       ((and (eql (car (payload message)) :mouse-button-up-event)
+             (= (second (member :button (payload message))) 4))
+        (destructuring-bind (left right bottom top) *world-view*
+          (setf *world-view* (list left (* right 0.99) (* bottom 0.99) top))
+          (set-world-view))))))
                 
 
 (defparameter *system-listener-entity*
@@ -51,7 +61,11 @@
 
 (defparameter *foo*
   (make-entity '("updatable")))
-;;(set-meta *foo* "update function" 
+;;(set-meta *foo* "update function"
+;;          #'(lambda (tick)
+;;              (destructuring-bind (left right bottom top) *world-view*
+;;                (setf *world-view* (list left (* right 1.01) (* bottom 1.01) top))
+;;                (set-world-view))))
 
 (defparameter *foob*
   (make-entity '("updatable")))
@@ -75,6 +89,7 @@
 (set-meta *image-image-drawer* "update function"
           #'(lambda (tick)
               (let ((x (get-meta *image-image-drawer* "render:screen:x")))
-                (set-meta *image-image-drawer* "render:screen:x" (+ 0 x)))))
+                (set-meta *image-image-drawer* "render:screen:x" (+ 0 x)))
+              nil))
 
 ;(mainloop 'test)
