@@ -11,7 +11,13 @@
        ((and (member :key-down-event (payload message))
              (eql (second (member :key (payload message)))
                   :sdl-key-escape))
-        (push-quit-event)))))
+        (push-quit-event))
+       ((eql (car (payload message)) :video-resize-event)
+        (let ((w (second (cdr (payload message))))
+              (h (fourth (cdr (payload message)))))
+          (setf *screen-width* w *screen-height* h)
+          (setup-screen))))))
+                
 
 (defparameter *system-listener-entity*
   (make-entity '("sdl receiver")))
@@ -33,21 +39,7 @@
            (y (get-meta receiver "render:screen:y"))
            (image (get-image (get-meta receiver "render:screen:image-name"))))
            
-       (gl:bind-texture :texture-2d image)
-       (gl:color 1 1 1)
-       (gl:enable :texture-2d)
-       ;;(gl:enable :blend)
-       ;;(gl:blend-func :src-alpha :one-minus-src-alpha)
-
-       (gl:with-primitive :quads
-         (gl:tex-coord 0 0)
-         (gl:vertex x 0.0)
-         (gl:tex-coord 1 0)
-         (gl:vertex (+ x 100.0) 0.0)
-         (gl:tex-coord 1 1)
-         (gl:vertex (+ x 100.0) 100.0)
-         (gl:tex-coord 0 1)
-         (gl:vertex x 100.0))
+       (draw-image-at image x y 32 32)
        ;; TODO: flush may not be needed
        (gl:flush))))
 
@@ -82,6 +74,6 @@
 (set-meta *image-image-drawer* "update function"
           #'(lambda (tick)
               (let ((x (get-meta *image-image-drawer* "render:screen:x")))
-                (set-meta *image-image-drawer* "render:screen:x" (+ 0.1 x)))))
+                (set-meta *image-image-drawer* "render:screen:x" (+ 1 x)))))
 
 ;(mainloop 'test)

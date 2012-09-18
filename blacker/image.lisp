@@ -8,6 +8,8 @@
   (setf *tile-cache* (make-hash-table :test #'equal)))
 
 (defun surface-to-texture (image)
+  (declare (optimize (safety 0))
+           (sdl-surface image))
   ;; make sure width and height are powers of two
   (assert (= (logand (width image) (1- (width image))) 0))
   (assert (= (logand (height image) (1- (height image))) 0))
@@ -54,27 +56,28 @@
       (blit-surface image clipped-image)
       (setf (gethash name *tile-cache*) (surface-to-texture clipped-image)))))
 
-(defun darken-surface (surface amount)
-  (declare (sdl:surface surface)
-           (short-float amount))
-  (let ((new-surface (create-surface 32 32 :pixel-alpha t)))
-    ;; XXX: in the past we had the locked surface version here, but
-    ;;   this seems to not be required in the newer svn versions of
-    ;;   lispbuilder-sdl
-    ;;(with-locked-surface (surf new-surface)
-    (let ((surf new-surface))
-      (loop for y below (height surf) do
-           (loop for x below (width surf) do
-                (let ((old-pixel-color (sdl:read-pixel-* x y :surface surface)))
-                  (draw-pixel-* x y 
-                                :surface surf
-                                :color (color :r (* (- 1 amount) (r old-pixel-color))
-                                              :g (* (- 1 amount) (g old-pixel-color))
-                                              :b (* (- 1 amount) (b old-pixel-color))
-                                              :a (a old-pixel-color)))))))
-    new-surface))
-
-(defun get-image (name &key (darken 0.0))
-  (declare (simple-string name)
-           (short-float darken))
+(defun get-image (name)
+  (declare (simple-string name))
   (gethash name *tile-cache*))
+
+(defun draw-image-at (image x y w h)
+  (declare (optimize (safety 0))
+           ((or string fixnum) image)
+           (real x y w h))
+  (gl:bind-texture :texture-2d (etypecase image
+                                 (fixnum image)
+                                 (string (get-image image))))
+  (gl:color 1 1 1)
+  (gl:enable :texture-2d)
+  ;;(gl:enable :blend)
+  ;;(gl:blend-func :src-alpha :one-minus-src-alpha)
+  
+  (gl:with-primitive :quads
+    (gl:tex-coord 0 0)
+    (gl:vertex x y)
+    (gl:tex-coord 1 0)
+    (gl:vertex (+ x w) y)
+    (gl:tex-coord 1 1)
+    (gl:vertex (+ x w) (+ y h))
+    (gl:tex-coord 0 1)
+    (gl:vertex x (+ y h))))

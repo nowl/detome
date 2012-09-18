@@ -9,6 +9,8 @@
 (defparameter *screen-width* 800)
 (defparameter *ms-per-update* (/ 1000 15))
 (defparameter *max-frame-skip* 5)
+(defparameter *window-flags* 0)
+(defparameter *window-title* "")
 
 (defparameter *internal-entity* (make-entity))
 
@@ -72,41 +74,50 @@
             (gen-event-form (first event) (second event)))
      (:idle () (gen-idle-event))))
 
+(defun setup-screen ()
+  (declare (optimize (safety 0)))
+  (window *screen-width* *screen-height*
+          :flags *window-flags*
+          :title-caption *window-title*)
+  ;;(sdl:set-gl-attribute :sdl-gl-red-size 5)
+  ;;(sdl:set-gl-attribute :sdl-gl-green-size 5)
+  ;;(sdl:set-gl-attribute :sdl-gl-blue-size 5)
+  (sdl:set-gl-attribute :sdl-gl-doublebuffer 1)
+  
+  ;;(gl:disable :depth-test)
+  ;;(gl:enable :texture-2d)
+
+  (gl:clear-color 0 0 0 0)
+  (gl:viewport 0 0 *screen-width* *screen-height*)
+  (gl:matrix-mode :projection)
+  (gl:load-identity)
+  (gl:ortho 0 *screen-width* *screen-height* 0 0 1)
+  (gl:matrix-mode :modelview)
+  (gl:load-identity)
+
+  (setf *default-surface* (create-surface *screen-width* *screen-height*)))
+
 (defun mainloop (&key (init-width *screen-width*) (init-height *screen-height*)
                  (ms-per-update *ms-per-update*) (max-frame-skip *max-frame-skip*)
-                 (sdl-flags 0) title)
+                 (sdl-flags 0) title resizable)
   (setf *screen-width* init-width
         *screen-height* init-height
         *ms-per-update* (float ms-per-update)
-        *max-frame-skip* max-frame-skip)
-  (let ((total-flags (logior sdl-flags sdl-opengl))) ;;sdl-sw-surface)))
-	(with-init ()
-	  (window *screen-width* *screen-height* :flags total-flags :title-caption title)
+        *max-frame-skip* max-frame-skip
+        *window-flags* (logior sdl-flags
+                               sdl-opengl
+                               (if resizable sdl-resizable 0))
+        *window-title* title)
+  (with-init ()
+    (setf cl-opengl-bindings:*gl-get-proc-address* #'sdl-cffi::sdl-gl-get-proc-address)
+    
+    (setup-screen)
+  
+    (setf *game-tick* 0
+          *loops* 0
+          *next-update-in-ms* (+ (get-tick-count) *ms-per-update*))
 
-      (setf cl-opengl-bindings:*gl-get-proc-address* #'sdl-cffi::sdl-gl-get-proc-address)
+    (send-message :system-init nil *internal-entity* :async)
 
-      ;;(sdl:set-gl-attribute :sdl-gl-red-size 5)
-      ;;(sdl:set-gl-attribute :sdl-gl-green-size 5)
-      ;;(sdl:set-gl-attribute :sdl-gl-blue-size 5)
-      (sdl:set-gl-attribute :sdl-gl-doublebuffer 1)
-
-      ;;(gl:disable :depth-test)
-      ;;(gl:enable :texture-2d)
-
-	  (setf *default-surface* (create-surface *screen-width* *screen-height*)
-			*game-tick* 0
-            *loops* 0
-			*next-update-in-ms* (+ (get-tick-count) *ms-per-update*))
-
-      (gl:clear-color 0 0 0 0)
-      (gl:viewport 0 0 *screen-width* *screen-height*)
-      (gl:matrix-mode :projection)
-      (gl:load-identity)
-      (gl:ortho 0 *screen-width* *screen-height* 0 0 1)
-      (gl:matrix-mode :modelview)
-      (gl:load-identity)
-
-      (send-message :system-init nil *internal-entity* :async)
-
-	  (setf (frame-rate) 0)
-	  (gen-sdl-with-events))))
+    (setf (frame-rate) 0)
+    (gen-sdl-with-events))))
