@@ -11,6 +11,7 @@
 (defparameter *max-frame-skip* 5)
 (defparameter *window-flags* 0)
 (defparameter *window-title* "")
+(defparameter *world-view* '(0 32 24 0))
 
 (defparameter *internal-entity* (make-entity))
 
@@ -18,6 +19,7 @@
   (coerce (truncate (system-ticks)) 'fixnum))
 
 (defun main-render (interpolation)
+  (declare (optimize (safety 0)))
   (gl:clear :color-buffer-bit)
   (send-message :system-render interpolation *internal-entity* :async)
   (update-display))
@@ -72,13 +74,17 @@
   `(with-events (:poll)
      ,@(loop for event in *event-list-data* collect
             (gen-event-form (first event) (second event)))
-     (:idle () (gen-idle-event))))
+     (:idle () 
+            (gen-idle-event))))
 
 (defun setup-screen ()
   (declare (optimize (safety 0)))
   (window *screen-width* *screen-height*
           :flags *window-flags*
           :title-caption *window-title*)
+
+  (setf cl-opengl-bindings:*gl-get-proc-address* #'sdl-cffi::sdl-gl-get-proc-address)
+  
   ;;(sdl:set-gl-attribute :sdl-gl-red-size 5)
   ;;(sdl:set-gl-attribute :sdl-gl-green-size 5)
   ;;(sdl:set-gl-attribute :sdl-gl-blue-size 5)
@@ -89,13 +95,19 @@
 
   (gl:clear-color 0 0 0 0)
   (gl:viewport 0 0 *screen-width* *screen-height*)
-  (gl:matrix-mode :projection)
-  (gl:load-identity)
-  (gl:ortho 0 *screen-width* *screen-height* 0 0 1)
-  (gl:matrix-mode :modelview)
-  (gl:load-identity)
+  
+  (set-world-view)
 
   (setf *default-surface* (create-surface *screen-width* *screen-height*)))
+
+(defun set-world-view ()
+  (declare (optimize (safety 0)))
+  (gl:matrix-mode :projection)
+  (gl:load-identity)
+  (destructuring-bind (left right bottom top) *world-view*
+    (gl:ortho left right bottom top 0 1))
+  (gl:matrix-mode :modelview)
+  (gl:load-identity))  
 
 (defun mainloop (&key (init-width *screen-width*) (init-height *screen-height*)
                  (ms-per-update *ms-per-update*) (max-frame-skip *max-frame-skip*)
@@ -109,8 +121,7 @@
                                (if resizable sdl-resizable 0))
         *window-title* title)
   (with-init ()
-    (setf cl-opengl-bindings:*gl-get-proc-address* #'sdl-cffi::sdl-gl-get-proc-address)
-    
+       
     (setup-screen)
   
     (setf *game-tick* 0
@@ -120,4 +131,4 @@
     (send-message :system-init nil *internal-entity* :async)
 
     (setf (frame-rate) 0)
-    (gen-sdl-with-events))))
+    (gen-sdl-with-events)))

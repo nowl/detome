@@ -5,7 +5,7 @@
  '(:sdl-event)
  #'(lambda (message receiver)
      (declare (ignore receiver))
-     (format t "received internal :sdl-event ~a~%" (payload message))
+     ;;(format t "received internal :sdl-event ~a~%" (payload message))
      (cond
        ((eql (car (payload message)) :quit-event) t)
        ((and (member :key-down-event (payload message))
@@ -26,7 +26,7 @@
  "updatable"
  '(:system-update)
  #'(lambda (message receiver)
-     (format t "update is being called on the ~a object~%" receiver)
+     ;;(format t "update is being called on the ~a object~%" receiver)
      (let ((update-func (get-meta receiver "update function")))
        (when update-func
          (funcall update-func (payload message))))))
@@ -35,13 +35,13 @@
  "renderable-image"
  '(:system-render)
  #'(lambda (message receiver)
-     (let ((x (get-meta receiver "render:screen:x"))
-           (y (get-meta receiver "render:screen:y"))
+     (let ((i (get-meta receiver "render:screen:x"))
+           (j (get-meta receiver "render:screen:y"))
            (image (get-image (get-meta receiver "render:screen:image-name"))))
            
-       (draw-image-at image x y 32 32)
-       ;; TODO: flush may not be needed
-       (gl:flush))))
+       (loop for x below 26 do
+            (loop for y below 24 do
+                 (draw-image-at image (+ i x) (+ j y) 1 1))))))
 
 (make-component
  "system-init"
@@ -51,6 +51,7 @@
 
 (defparameter *foo*
   (make-entity '("updatable")))
+;;(set-meta *foo* "update function" 
 
 (defparameter *foob*
   (make-entity '("updatable")))
@@ -69,11 +70,11 @@
   (make-entity '("renderable-image"
                  "updatable")))
 (set-meta *image-image-drawer* "render:screen:x" 0)
-(set-meta *image-image-drawer* "render:screen:y" 200)
+(set-meta *image-image-drawer* "render:screen:y" 0)
 (set-meta *image-image-drawer* "render:screen:image-name" "cave")
 (set-meta *image-image-drawer* "update function"
           #'(lambda (tick)
               (let ((x (get-meta *image-image-drawer* "render:screen:x")))
-                (set-meta *image-image-drawer* "render:screen:x" (+ 1 x)))))
+                (set-meta *image-image-drawer* "render:screen:x" (+ 0 x)))))
 
 ;(mainloop 'test)
