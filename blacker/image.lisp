@@ -9,12 +9,15 @@
 
 (defun surface-to-texture (image)
   ;; make sure width and height are powers of two
-  (assert (= (logand (width image) (1- (width image))) 0))
-  (assert (= (logand (height image) (1- (height image))) 0))
+  ;(assert (= (logand (width image) (1- (width image))) 0))
+  ;(assert (= (logand (height image) (1- (height image))) 0))
 
   (let ((texture (car (gl:gen-textures 1))))
     (gl:bind-texture :texture-2d texture)
     (gl:tex-parameter :texture-2d :texture-min-filter :linear)
+    (gl:tex-parameter :texture-2d :texture-mag-filter :linear)
+    (gl:tex-parameter :texture-2d :texture-wrap-s :clamp)
+    (gl:tex-parameter :texture-2d :texture-wrap-t :clamp)
     
     (with-pixel (pix (sdl:fp image))
       ;; we should probably be a bit more intelligent about this, but this
@@ -78,3 +81,21 @@
   (declare (simple-string name)
            (short-float darken))
   (gethash name *tile-cache*))
+
+(defun draw-image (name x y w h r g b)
+  (let ((image (get-image name)))
+    (gl:bind-texture :texture-2d image)
+    (gl:color r g b)
+    (gl:enable :texture-2d)
+    ;;(gl:enable :blend)
+    ;;(gl:blend-func :src-alpha :one-minus-src-alpha)
+
+    (gl:with-primitive :quads
+      (gl:tex-coord 0 0)
+      (gl:vertex x y)
+      (gl:tex-coord 1 0)
+      (gl:vertex (+ x w) y)
+      (gl:tex-coord 1 1)
+      (gl:vertex (+ x w) (+ y h))
+      (gl:tex-coord 0 1)
+      (gl:vertex x (+ y h)))))

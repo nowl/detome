@@ -5,9 +5,9 @@
 (defparameter *loops* 0)
 (defparameter *game-tick* 0)
 (defparameter *next-update-in-ms* 0)
-(defparameter *screen-height* 600)
-(defparameter *screen-width* 800)
-(defparameter *ms-per-update* (/ 1000 15))
+(defparameter *screen-height* 768)
+(defparameter *screen-width* 1024)
+(defparameter *ms-per-update* (/ 1000 25))
 (defparameter *max-frame-skip* 5)
 
 (defparameter *internal-entity* (make-entity))
@@ -15,7 +15,14 @@
 (defun get-tick-count ()  
   (coerce (truncate (system-ticks)) 'fixnum))
 
+(defparameter *fps-counter* 0)
+(defparameter *last-tick* (get-tick-count))
+
 (defun main-render (interpolation)
+  (when (> (- (get-tick-count) *last-tick*) 1000)
+    (setf *last-tick* (get-tick-count))
+          *fps-counter* 0)
+  (incf *fps-counter*)
   (gl:clear :color-buffer-bit)
   (send-message :system-render interpolation *internal-entity* :async)
   (update-display))

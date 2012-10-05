@@ -31,25 +31,14 @@
  #'(lambda (message receiver)
      (let ((x (get-meta receiver "render:screen:x"))
            (y (get-meta receiver "render:screen:y"))
-           (image (get-image (get-meta receiver "render:screen:image-name"))))
-           
-       (gl:bind-texture :texture-2d image)
-       (gl:color 1 1 1)
-       (gl:enable :texture-2d)
-       ;;(gl:enable :blend)
-       ;;(gl:blend-func :src-alpha :one-minus-src-alpha)
-
-       (gl:with-primitive :quads
-         (gl:tex-coord 0 0)
-         (gl:vertex x 0.0)
-         (gl:tex-coord 1 0)
-         (gl:vertex (+ x 100.0) 0.0)
-         (gl:tex-coord 1 1)
-         (gl:vertex (+ x 100.0) 100.0)
-         (gl:tex-coord 0 1)
-         (gl:vertex x 100.0))
-       ;; TODO: flush may not be needed
-       (gl:flush))))
+           (c (get-meta receiver "render:color:red")))
+       (loop for i below 10 do
+            (loop for j below 10 do
+                 (draw-image (get-meta receiver "render:screen:image-name")
+                             (+ (* i 25) x)
+                             (+ (* j 25) y)
+                             25 25
+                             c (- 1 c) 0))))))
 
 (make-component
  "system-init"
@@ -65,7 +54,12 @@
 
 (defun load-images ()
   (clear-image-caches)
-  (define-image "cave" "../data/tileset.png" `(1 ,(1+ (* 3 33)) 32 32)))
+  (loop for j from 0 below 8 do
+       (loop for i below 32 do
+            (let ((image-name (format nil "cp437-~2,'0x" (+ i (* 32 j)))))
+              (define-image image-name "/home/nowl/Desktop/Codepage-437.png" `(,(+ 8 (* 9 i))
+                                                                                ,(+ 8 (* 16 j))
+                                                                                9 16))))))
 
 ;;(clear-entities-from-comp "system-init")
 
@@ -77,11 +71,14 @@
   (make-entity '("renderable-image"
                  "updatable")))
 (set-meta *image-image-drawer* "render:screen:x" 0)
-(set-meta *image-image-drawer* "render:screen:y" 200)
-(set-meta *image-image-drawer* "render:screen:image-name" "cave")
+(set-meta *image-image-drawer* "render:screen:y" 100)
+(set-meta *image-image-drawer* "render:color:red" 1)
+(set-meta *image-image-drawer* "render:screen:image-name" "cp437-32")
 (set-meta *image-image-drawer* "update function"
           #'(lambda (tick)
-              (let ((x (get-meta *image-image-drawer* "render:screen:x")))
-                (set-meta *image-image-drawer* "render:screen:x" (+ 0.1 x)))))
+              (let ((x (get-meta *image-image-drawer* "render:screen:x"))
+                    (c (get-meta *image-image-drawer* "render:color:red")))
+                (set-meta *image-image-drawer* "render:screen:x" (+ .03 x))
+                (set-meta *image-image-drawer* "render:color:red" (- c 0.002)))))
 
 ;(mainloop 'test)
