@@ -1,17 +1,5 @@
 (in-package :blacker)
 
-(make-component
- "sdl receiver"
- '(:sdl-event)
- #'(lambda (message)
-     (format t "received internal :sdl-event ~a~%" (payload message))
-     (cond
-       ((eql (car (payload message)) :quit-event) t)
-       ((and (member :key-down-event (payload message))
-             (eql (second (member :key (payload message)))
-                  :sdl-key-escape))
-        (push-quit-event)))))
-
 (defun make-renderable-component (name meta)
   (make-component
    (concatenate 'string "renderable-image-" name)
@@ -20,13 +8,7 @@
        (let ((x (gethash "render:x" meta))
              (y (gethash "render:y" meta))
              (image (gethash "render:image" meta)))
-         (loop for i below 10 do
-              (loop for j below 10 do
-                   (draw-image image
-                               (+ (* i 25) x)
-                               (+ (* j 25) y)
-                               25 25
-                               1 1 0)))))))
+         (draw-image image x y 13.5 24 1 1 0)))))
 
 (defun load-images ()
   (clear-image-caches)
@@ -51,7 +33,7 @@
 (defparameter *player* (make-hash-table :test #'equal))
 (setf (gethash "render:x" *player*) 0
       (gethash "render:y" *player*) 200
-      (gethash "render:image" *player*) "cp437-32")
+      (gethash "render:image" *player*) "cp437-40")
 (make-renderable-component "player" *player*)
 
 (defun make-update-component (name meta)
@@ -68,4 +50,25 @@
 
 (make-update-component "player-update" *player*)
 
-;;(defparameter *walls* 
+(make-component
+ "sdl event receiver"
+ '(:sdl-event)
+ #'(lambda (message)
+     (cond
+       ((eql (car (payload message)) :quit-event) t)
+       ((member :key-down-event (payload message))
+        (case (second (member :key (payload message)))
+          (:sdl-key-escape (push-quit-event))
+          (:sdl-key-a (incf (gethash "render:x" *player*) -25))
+          (:sdl-key-d (incf (gethash "render:x" *player*) 25))
+          (:sdl-key-s (incf (gethash "render:y" *player*) 25))
+          (:sdl-key-w (incf (gethash "render:y" *player*) -25)))))))
+
+
+(defparameter *walls* (loop for i below 200 collect (make-hash-table :test #'equal)))
+
+(loop for wall in *walls* do
+     (setf (gethash "render:x" wall) (* 13.5 (random 60))
+           (gethash "render:y" wall) (* 24 (random 30))
+           (gethash "render:image" wall) "cp437-42")
+     (make-renderable-component (symbol-name (gensym "wall")) wall))
