@@ -10,8 +10,6 @@
 (defparameter *ms-per-update* (/ 1000 25))
 (defparameter *max-frame-skip* 5)
 
-(defparameter *internal-entity* (make-entity))
-
 (defun get-tick-count ()  
   (coerce (truncate (system-ticks)) 'fixnum))
 
@@ -24,12 +22,12 @@
           *fps-counter* 0)
   (incf *fps-counter*)
   (gl:clear :color-buffer-bit)
-  (send-message :system-render interpolation *internal-entity* :async)
+  (send-message :system-render interpolation :async)
   (update-display))
 
 (defun main-update ()
   (incf *game-tick*)
-  (send-message :system-update *game-tick* *internal-entity*)
+  (send-message :system-update *game-tick*)
   (process-messages))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
@@ -38,7 +36,6 @@
                       (send-message
                        :sdl-event
                        (list ,sdl-event-name ,@args)
-                       *internal-entity*
                        :async))))
 
 (defmacro gen-idle-event ()
@@ -113,7 +110,7 @@
       (gl:matrix-mode :modelview)
       (gl:load-identity)
 
-      (send-message :system-init nil *internal-entity* :async)
+      (send-message :system-init nil :async)
 
 	  (setf (frame-rate) 0)
 	  (gen-sdl-with-events))))

@@ -3,8 +3,7 @@
 (make-component
  "sdl receiver"
  '(:sdl-event)
- #'(lambda (message receiver)
-     (declare (ignore receiver))
+ #'(lambda (message)
      (format t "received internal :sdl-event ~a~%" (payload message))
      (cond
        ((eql (car (payload message)) :quit-event) t)
@@ -13,44 +12,21 @@
                   :sdl-key-escape))
         (push-quit-event)))))
 
-(defparameter *system-listener-entity*
-  (make-entity '("sdl receiver")))
-
-(make-component
- "updatable"
- '(:system-update)
- #'(lambda (message receiver)
-     (format t "update is being called on the ~a object~%" receiver)
-     (let ((update-func (get-meta receiver "update function")))
-       (when update-func
-         (funcall update-func (payload message))))))
-
-(make-component
- "renderable-image"
- '(:system-render)
- #'(lambda (message receiver)
-     (let ((x (get-meta receiver "render:screen:x"))
-           (y (get-meta receiver "render:screen:y"))
-           (c (get-meta receiver "render:color:red")))
-       (loop for i below 10 do
-            (loop for j below 10 do
-                 (draw-image (get-meta receiver "render:screen:image-name")
-                             (+ (* i 25) x)
-                             (+ (* j 25) y)
-                             25 25
-                             c (- 1 c) 0))))))
-
-(make-component
- "system-init"
- '(:system-init)
- #'(lambda (message receiver)
-     (funcall (get-meta receiver "system-init-function"))))
-
-(defparameter *foo*
-  (make-entity '("updatable")))
-
-(defparameter *foob*
-  (make-entity '("updatable")))
+(defun make-renderable-component (name meta)
+  (make-component
+   (concatenate 'string "renderable-image-" name)
+   '(:system-render)
+   #'(lambda (message)
+       (let ((x (gethash "render:x" meta))
+             (y (gethash "render:y" meta))
+             (image (gethash "render:image" meta)))
+         (loop for i below 10 do
+              (loop for j below 10 do
+                   (draw-image image
+                               (+ (* i 25) x)
+                               (+ (* j 25) y)
+                               25 25
+                               1 1 0)))))))
 
 (defun load-images ()
   (clear-image-caches)
@@ -61,24 +37,35 @@
                                                                                 ,(+ 8 (* 16 j))
                                                                                 9 16))))))
 
-;;(clear-entities-from-comp "system-init")
+(defun make-system-init-component (name meta)
+  (make-component
+   (concatenate 'string "system-init-" name)
+   '(:system-init)
+   #'(lambda (message)
+       (funcall (gethash "system-init:function" meta)))))
 
-(defparameter *image-loader*
-  (make-entity '("system-init")))
-(set-meta *image-loader* "system-init-function" #'load-images)
+(defparameter *image-loader* (make-hash-table :test #'equal))
+(setf (gethash "system-init:function" *image-loader*) #'load-images)
+(make-system-init-component "image-loader" *image-loader*)
 
-(defparameter *image-image-drawer*
-  (make-entity '("renderable-image"
-                 "updatable")))
-(set-meta *image-image-drawer* "render:screen:x" 0)
-(set-meta *image-image-drawer* "render:screen:y" 100)
-(set-meta *image-image-drawer* "render:color:red" 1)
-(set-meta *image-image-drawer* "render:screen:image-name" "cp437-32")
-(set-meta *image-image-drawer* "update function"
-          #'(lambda (tick)
-              (let ((x (get-meta *image-image-drawer* "render:screen:x"))
-                    (c (get-meta *image-image-drawer* "render:color:red")))
-                (set-meta *image-image-drawer* "render:screen:x" (+ .03 x))
-                (set-meta *image-image-drawer* "render:color:red" (- c 0.002)))))
+(defparameter *player* (make-hash-table :test #'equal))
+(setf (gethash "render:x" *player*) 0
+      (gethash "render:y" *player*) 200
+      (gethash "render:image" *player*) "cp437-32")
+(make-renderable-component "player" *player*)
 
-;(mainloop 'test)
+(defun make-update-component (name meta)
+  (make-component
+   (concatenate 'string "update-" name)
+   '(:system-update)
+   #'(lambda (message)
+       (funcall (gethash "update:function" meta)))))
+
+(setf (gethash "update:function" *player*)
+      #'(lambda ()
+          (let ((x (gethash "render:x" *player*)))
+            (setf (gethash "render:x" *player*) (+ .1 x)))))
+
+(make-update-component "player-update" *player*)
+
+;;(defparameter *walls* 
