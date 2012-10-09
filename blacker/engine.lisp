@@ -5,7 +5,8 @@
           sender
           type
           payload
-          make-component))
+          make-component
+          clear-components))
 
 ;;; definitions of components, messages, ...
 
@@ -43,6 +44,11 @@
 
 ;;; public engine functions
 
+(defun clear-components ()
+  (setf *name-component* (make-hash-table :test #'equal)
+        *responder-type-component-list* (make-hash-table)
+        *messages* nil))
+
 (defun add-component-to-responder-types (component message-types)
   (loop for message-type in message-types do
        (multiple-value-bind (components exist) 
@@ -79,7 +85,7 @@
             (add-component-to-responder-types new-comp message-types)
             new-comp))))
 
-(defun send-message (type payload &optional (delivery-type :sync))
+(defun send-message (type &optional payload (delivery-type :sync))
   (declare (symbol type delivery-type))
   (let ((message
          (make-instance 'message :payload payload :type type)))

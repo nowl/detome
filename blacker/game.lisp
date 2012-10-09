@@ -1,6 +1,8 @@
 (in-package :blacker)
 
-(export '(mainloop))
+(export '(mainloop
+          *fps-counter*
+          *game-tick*))
 
 (defparameter *loops* 0)
 (defparameter *game-tick* 0)
@@ -27,7 +29,7 @@
 
 (defun main-update ()
   (incf *game-tick*)
-  (send-message :system-update *game-tick*)
+  (send-message :system-update)
   (process-messages))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
