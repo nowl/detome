@@ -99,3 +99,16 @@
       (gl:vertex (+ x w) (+ y h))
       (gl:tex-coord 0 1)
       (gl:vertex x (+ y h)))))
+
+;; general drawing routines
+
+(defparameter *line-width* 1)
+
+(defun draw-line (xs ys xe ye r g b)
+  (gl:disable :texture-2d)
+  (gl:color r g b)
+  (gl:line-width *line-width*)
+
+  (gl:with-primitive :lines
+    (gl:vertex xs ys)
+    (gl:vertex xe ye)))
