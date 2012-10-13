@@ -2,7 +2,10 @@
 
 (export '(mainloop
           *fps-counter*
-          *game-tick*))
+          *game-tick*
+          *screen-width*
+          *screen-height*
+          clear-engine-stats))
 
 (defparameter *loops* 0)
 (defparameter *game-tick* 0)

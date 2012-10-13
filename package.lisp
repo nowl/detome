@@ -1,3 +1,5 @@
 (defpackage :detome
-  (:use #:cl)
+  (:use #:cl
+        #:blacker)
+  (:shadowing-import-from :blacker :type)
   (:export #:detome))

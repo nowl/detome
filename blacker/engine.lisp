@@ -6,7 +6,8 @@
           type
           payload
           make-component
-          clear-components))
+          clear-components
+          send-message))
 
 ;;; definitions of components, messages, ...
 

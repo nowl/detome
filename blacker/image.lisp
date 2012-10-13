@@ -1,5 +1,11 @@
 (in-package #:blacker)
 
+(export '(clear-image-caches
+          define-image
+          get-image
+          draw-image
+          draw-line))
+
 (defparameter *image-cache* (make-hash-table :test #'equal))
 (defparameter *tile-cache* (make-hash-table :test #'equal))
 

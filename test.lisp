@@ -1,21 +1,12 @@
-(in-package :blacker)
+(in-package :detome)
 
 (clear-components)
 (clear-engine-stats)
 
-;(defparameter *cell-dimensions* '(13.5 24))
-(defparameter *cell-dimensions* `(,(* 9 1.25) ,(* 16 1.25)))
-
-(defmacro gh (ht key)
-  `(gethash ,key ,ht))
-(defmacro sh (ht &rest keys-and-values)
-  (flet ((make-pairs ()
-           (loop for a in keys-and-values by #'cddr 
-              for b in (cdr keys-and-values) by #'cddr collecting
-                (list a b))))
-    `(setf ,@(loop for pair in (make-pairs) appending
-                  `((gethash ,(car pair) ,ht)
-                    ,(cadr pair))))))
+(defparameter *cell-dimensions* `(,(floor (* 9 1.25)) ,(floor (* 16 1.25))))
+(defparameter *hud-cell-width* 20)
+(defparameter *view-cell-width* (- (floor (/ *screen-width* (car *cell-dimensions*))) *hud-cell-width*))
+(defparameter *view-cell-height* (floor (/ *screen-width* (cadr *cell-dimensions*))))
 
 (defparameter *num-render-levels* 3)
 
@@ -32,20 +23,21 @@
    (concatenate 'string "renderable-image-" name)
    '(:render)
    #'(lambda (message)
-       (let ((x (gh meta 'render-x))
-             (y (gh meta 'render-y))
-             (image (gh meta 'render-image))
-             (level (gh meta 'render-level)))
-         (when (= level (car (payload message)))
-           (destructuring-bind (cw ch) *cell-dimensions*
-             (draw-image image x y cw ch 1 0 0)))))))
+       (destructuring-bind (cw ch) *cell-dimensions*
+         (let ((x (* cw (gh meta 'cell-x)))
+               (y (* ch (gh meta 'cell-y)))
+               (image-and-color (gh meta 'render-img-and-clr))
+               (level (gh meta 'render-level)))
+           (when (= level (car (payload message)))
+             (destructuring-bind (image (r g b)) image-and-color
+               (draw-image image x y cw ch r g b))))))))
 
 (defun load-images ()
   (clear-image-caches)
   (loop for j from 0 below 8 do
        (loop for i below 32 do
             (let ((image-name (format nil "cp437-~2,'0x" (+ i (* 32 j)))))
-              (define-image image-name "../Codepage-437-solid.png" `(,(+ 8 (* 9 i))
+              (define-image image-name "Codepage-437-solid.png" `(,(+ 8 (* 9 i))
                                                                    ,(+ 8 (* 16 j))
                                                                    9 16))))))
 
@@ -62,10 +54,10 @@
 
 (defparameter *player* (make-hash-table))
 (sh *player* 
-    'render-x 0
-    'render-y 200
+    'cell-x 2
+    'cell-y 2
     'render-level 1
-    'render-image "cp437-40"
+    'render-img-and-clr (name-image "player")
     'box-selector '(0 0))
 (make-renderable-component "player" *player*)
 
@@ -97,8 +89,8 @@
 
 (sh *player* 'update-function
     #'(lambda ()
-        (let ((x (gh *player* 'render-x)))
-          (sh *player* 'render-x (+ .2 x)))
+        (let ((x (gh *player* 'cell-x)))
+          (sh *player* 'cell-x (+ .2 x)))
         nil))
 
 (make-update-component "player-update" *player*)
@@ -111,39 +103,38 @@
        ((eql (car (payload message)) :quit-event) t)
        ((member :key-down-event (payload message))
         (case (second (member :key (payload message)))
-          (:sdl-key-escape (push-quit-event))
-          (:sdl-key-a (incf (gh *player* 'render-x) -25))
-          (:sdl-key-d (incf (gh *player* 'render-x) 25))
-          (:sdl-key-s (incf (gh *player* 'render-y) 25))
-          (:sdl-key-w (incf (gh *player* 'render-y) -25))))
+          (:sdl-key-escape (sdl::push-quit-event))
+          (:sdl-key-a (incf (gh *player* 'cell-x) -25))
+          (:sdl-key-d (incf (gh *player* 'cell-x) 25))
+          (:sdl-key-s (incf (gh *player* 'cell-y) 25))
+          (:sdl-key-w (incf (gh *player* 'cell-y) -25))))
        ((member :mouse-motion-event (payload message))
         (let ((x (second (member :x (payload message))))
               (y (second (member :y (payload message)))))
           (destructuring-bind (cw ch) *cell-dimensions*
-            (sh *player* 'box-selector (list (floor (/ x cw))
-                                             (floor (/ y ch))))))))))
+            (sh *player* 'box-selector (list (floor (/ x cw)) (floor (/ y ch))))))))))
                  
 (defparameter *walls* (loop for i below 2000 collect (make-hash-table)))
 (defparameter *wall-names* nil)
 
+;; build walls
 (loop for wall in *walls* do
      (destructuring-bind (cw ch) *cell-dimensions*
-       (setf ;(gh wall 'render-x) (floor (* cw (random (floor (- (/ *screen-width* cw) 25)))))
-             ;(gh wall 'render-y) (floor (* ch (random (floor (/ *screen-height* ch)))))
-             (gh wall 'render-x) (* cw (floor (/ (random *screen-width*) cw)))
-             (gh wall 'render-y) (* ch (floor (/ (random *screen-height*) ch)))
-             (gh wall 'render-level) 0
-             (gh wall 'render-image) "cp437-DB"))
+       (sh wall
+           'cell-x (random *view-cell-width*)
+           'cell-y (random *view-cell-height*)
+           'render-level 0
+           'render-img-and-clr (name-image "water")))
      (let ((name (symbol-name (gensym "wall"))))
        (push name *wall-names*)
        (make-renderable-component name wall)))
 
 (defun draw-box (x y)
   (destructuring-bind (cw ch) *cell-dimensions*
-    (let ((lx (floor (1- (* x cw))))
-          (rx (floor (1+ (+ cw (* x cw)))))
-          (by (floor (1+ (+ ch (* y ch)))))
-          (ty (floor (1- (* y ch)))))
+    (let ((lx (1- (* x cw)))
+          (rx (1+ (+ cw (* x cw))))
+          (by (1+ (+ ch (* y ch))))
+          (ty (1- (* y ch))))
       (draw-line lx ty rx ty 1 1 1)
       (draw-line rx ty rx by 1 1 1)
       (draw-line rx by lx by 1 1 1)
@@ -151,10 +142,10 @@
 
 (defun draw-selector (x y divider)
   (destructuring-bind (cw ch) *cell-dimensions*
-    (let ((lx (floor (1- (* x cw))))
-          (rx (floor (1+ (+ cw (* x cw)))))
-          (by (floor (1+ (+ ch (* y ch)))))
-          (ty (floor (1- (* y ch)))))
+    (let ((lx (1- (* x cw)))
+          (rx (1+ (+ cw (* x cw))))
+          (by (1+ (+ ch (* y ch))))
+          (ty (1- (* y ch))))
       (draw-line lx ty (+ lx (/ (- rx lx) divider)) ty 1 1 1)
       (draw-line (- rx (/ (- rx lx) divider)) ty rx ty 1 1 1)
       (draw-line rx ty rx (+ ty (/ (- by ty) divider)) 1 1 1)
@@ -171,7 +162,7 @@
    #'(lambda (message)
        (destructuring-bind (x y) (gh *player* 'box-selector)
          (when (and (= 2 (car (payload message)))
-                    (< x (- (floor (/ *screen-width* (car *cell-dimensions*))) 25)))
+                    (< x (- (/ *screen-width* (car *cell-dimensions*)) *hud-cell-width*)))
            (draw-selector x y 4))))))
 
 ;(mainloop)
