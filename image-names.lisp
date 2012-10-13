@@ -7,6 +7,6 @@
 
 ;; name and color
 (sh *name-image-lookup*
-    "wall" '("cp437-DB" (1 1 0))
+    "wall" '("cp437-DB" (1 .5 0))
     "water" '("cp437-F7" (0 0 1))
     "player" '("cp437-40" (1 1 1)))

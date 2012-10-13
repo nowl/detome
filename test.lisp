@@ -3,11 +3,13 @@
 (clear-components)
 (clear-engine-stats)
 
-(defparameter *cell-dimensions* `(,(floor (* 9 1.25)) ,(floor (* 16 1.25))))
+(defparameter *view-size-multiplier* 1.25)
+(defparameter *cell-dimensions* `(,(floor (* 9 *view-size-multiplier*)) 
+                                   ,(floor (* 16 *view-size-multiplier*))))
 (defparameter *hud-cell-width* 20)
-(defparameter *view-cell-width* (- (floor (/ *screen-width* (car *cell-dimensions*))) *hud-cell-width*))
-(defparameter *view-cell-height* (floor (/ *screen-width* (cadr *cell-dimensions*))))
-
+(defparameter *view-cell-dimensions*
+  (list (- (floor (/ *screen-width* (car *cell-dimensions*))) *hud-cell-width*)
+        (floor (/ *screen-width* (cadr *cell-dimensions*)))))
 (defparameter *num-render-levels* 3)
 
 (make-component 
@@ -24,13 +26,13 @@
    '(:render)
    #'(lambda (message)
        (destructuring-bind (cw ch) *cell-dimensions*
-         (let ((x (* cw (gh meta 'cell-x)))
-               (y (* ch (gh meta 'cell-y)))
-               (image-and-color (gh meta 'render-img-and-clr))
-               (level (gh meta 'render-level)))
-           (when (= level (car (payload message)))
-             (destructuring-bind (image (r g b)) image-and-color
-               (draw-image image x y cw ch r g b))))))))
+         (with-ghs (cell-x cell-y render-img-and-clr render-level) meta
+           (when (= render-level (car (payload message)))
+             (destructuring-bind (image (r g b)) render-img-and-clr
+               (draw-image image
+                           (* cw cell-x)
+                           (* ch cell-y)
+                           cw ch r g b))))))))
 
 (defun load-images ()
   (clear-image-caches)
@@ -119,12 +121,13 @@
 
 ;; build walls
 (loop for wall in *walls* do
-     (destructuring-bind (cw ch) *cell-dimensions*
-       (sh wall
-           'cell-x (random *view-cell-width*)
-           'cell-y (random *view-cell-height*)
-           'render-level 0
-           'render-img-and-clr (name-image "water")))
+     (sh wall
+         'cell-x (random (first *view-cell-dimensions*))
+         'cell-y (random (second *view-cell-dimensions*))
+         'render-level 0
+         'render-img-and-clr (name-image (if (= 0 (random 2))
+                                             "water"
+                                             "wall")))
      (let ((name (symbol-name (gensym "wall"))))
        (push name *wall-names*)
        (make-renderable-component name wall)))
@@ -146,6 +149,7 @@
           (rx (1+ (+ cw (* x cw))))
           (by (1+ (+ ch (* y ch))))
           (ty (1- (* y ch))))
+      (draw-text "testing for B17&a__!" 20 20 0 1 0)
       (draw-line lx ty (+ lx (/ (- rx lx) divider)) ty 1 1 1)
       (draw-line (- rx (/ (- rx lx) divider)) ty rx ty 1 1 1)
       (draw-line rx ty rx (+ ty (/ (- by ty) divider)) 1 1 1)
