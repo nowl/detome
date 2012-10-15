@@ -11,6 +11,16 @@
   (list (- (floor (/ *screen-width* (car *cell-dimensions*))) *hud-cell-width*)
         (floor (/ *screen-width* (cadr *cell-dimensions*)))))
 (defparameter *num-render-levels* 3)
+(defparameter *objects-in-world* nil)
+
+(defun add-to-world-objects (object)
+  (push object *objects-in-world*))
+
+(defun find-objects-at (x y)
+  (loop for obj in *objects-in-world* when
+       (with-ghs (cell-x cell-y) obj
+         (and (= x cell-x) (= y cell-y)))
+     collect obj))
 
 (make-component 
  "main-render"
@@ -60,11 +70,21 @@
     'cell-y 2
     'render-level 1
     'render-img-and-clr (name-image "player")
-    'box-selector '(0 0))
+    'box-selector '(0 0)
+    'hover-object nil)
 (make-renderable-component "player" *player*)
+(add-to-world-objects *player*)
 
-(defun make-timed-update (num-ticks name meta)
-  (let ((timed-symbol (gensym (concatenate 'string "timer-" name))))
+;; time can be a number of ticks or a list containing (:seconds time)
+;; or (:ticks time)
+(defun make-timed-update (time name meta)
+  (let ((timed-symbol (gensym (concatenate 'string "timer-" name)))
+        (num-ticks (etypecase time
+                     (fixnum time)
+                     (list (ecase (first time)
+                             (:ticks (second time))
+                             (:seconds (/ (* (second time) 1000)
+                                          *ms-per-update* )))))))
     (sh meta timed-symbol (+ num-ticks *game-tick*))
     (make-component
      (concatenate 'string "update-timed-" name)
@@ -80,7 +100,7 @@
 (sh *fps-displayer* 'update-function
     #'(lambda ()
         (format t "fps: ~a~%" *fps-counter*)))
-(make-timed-update 40 "fps-displayer" *fps-displayer*)
+(make-timed-update '(:seconds 2) "fps-displayer" *fps-displayer*)
 
 (defun make-update-component (name meta)
   (make-component
@@ -114,23 +134,32 @@
         (let ((x (second (member :x (payload message))))
               (y (second (member :y (payload message)))))
           (destructuring-bind (cw ch) *cell-dimensions*
-            (sh *player* 'box-selector (list (floor (/ x cw)) (floor (/ y ch))))))))))
+            (let ((cell-x (floor (/ x cw)))
+                  (cell-y (floor (/ y ch))))
+            (sh *player* 'box-selector (list cell-x cell-y))
+            (let ((objs (find-objects-at cell-x cell-y)))
+              (sh *player* 'hover-object 
+                  (when objs
+                    (format nil "You see ~a" (gh (first objs) 'short-desc))))))))))))
                  
 (defparameter *walls* (loop for i below 2000 collect (make-hash-table)))
 (defparameter *wall-names* nil)
 
 ;; build walls
 (loop for wall in *walls* do
-     (sh wall
-         'cell-x (random (first *view-cell-dimensions*))
-         'cell-y (random (second *view-cell-dimensions*))
-         'render-level 0
-         'render-img-and-clr (name-image (if (= 0 (random 2))
-                                             "water"
-                                             "wall")))
+     (let ((typ (random 2)))
+       (sh wall
+           'cell-x (random (first *view-cell-dimensions*))
+           'cell-y (random (second *view-cell-dimensions*))
+           'render-level 0
+           'short-desc (if (= 0 typ) "water" "a wall")
+           'render-img-and-clr (name-image (if (= 0 typ)
+                                               "water"
+                                               "wall"))))
      (let ((name (symbol-name (gensym "wall"))))
        (push name *wall-names*)
-       (make-renderable-component name wall)))
+       (make-renderable-component name wall)
+       (add-to-world-objects wall)))
 
 (defun draw-box (x y)
   (destructuring-bind (cw ch) *cell-dimensions*
@@ -149,7 +178,6 @@
           (rx (1+ (+ cw (* x cw))))
           (by (1+ (+ ch (* y ch))))
           (ty (1- (* y ch))))
-      (draw-text "testing for B17&a__!" 20 20 0 1 0)
       (draw-line lx ty (+ lx (/ (- rx lx) divider)) ty 1 1 1)
       (draw-line (- rx (/ (- rx lx) divider)) ty rx ty 1 1 1)
       (draw-line rx ty rx (+ ty (/ (- by ty) divider)) 1 1 1)
@@ -167,6 +195,11 @@
        (destructuring-bind (x y) (gh *player* 'box-selector)
          (when (and (= 2 (car (payload message)))
                     (< x (- (/ *screen-width* (car *cell-dimensions*)) *hud-cell-width*)))
-           (draw-selector x y 4))))))
+           (draw-selector x y 4)
+           (let ((hover-obj (gh *player* 'hover-object)))
+             (when hover-obj
+               (draw-text hover-obj
+                          (1+ (first *view-cell-dimensions*)) 1 0 1 0 :fit-to (- *hud-cell-width* 2)))))))))
+
 
 ;(mainloop)

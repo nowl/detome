@@ -5,6 +5,7 @@
           *game-tick*
           *screen-width*
           *screen-height*
+          *ms-per-update*
           clear-engine-stats))
 
 (defparameter *loops* 0)

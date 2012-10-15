@@ -20,11 +20,36 @@
                   `((gethash ,(car pair) ,ht)
                     ,(cadr pair))))))
 
-(defun draw-text (text x y r g b)
-  (let ((images (loop for a across text collect (format nil "cp437-~x" (char-code a)))))
-    (loop for image in images for i from 0 do
-         (destructuring-bind (cw ch) *cell-dimensions*
-           (draw-image image 
-                       (* cw (+ x i))
-                       (* y ch)
-                       cw ch r g b)))))
+(defun break-up-text (text size)
+  (labels ((find-space (txt start)
+             (let ((new-pos (position #\  txt :start start)))
+               (when new-pos (cons new-pos (find-space txt (1+ new-pos))))))
+           (find-seq-pos (space-positions)
+             (loop with done for i from 1 while (not done) collect
+                  (let* ((mod (* i size))
+                         (pos (position-if #'(lambda (x) (>= x mod))
+                                           space-positions)))
+                    (if pos (1- pos) (progn (setf done t) nil))))))
+    (let ((space-positions (append (find-space text 0) (list (1+ (length text))))))
+      ;;(format t "positions ~a~%" space-positions)
+      (loop with prev = 0 for pos in (find-seq-pos space-positions) collect
+           (let ((space-pos (if pos
+                                (nth pos space-positions)
+                                (length text))))
+             (prog1 (subseq text prev space-pos)
+               ;;(format t "pos ~a~%" pos)
+               (setf prev (1+ space-pos))))))))
+           
+(defun draw-text (text x y r g b &key fit-to)
+  (let ((broken-text (if fit-to
+                         (break-up-text text fit-to)
+                         (list text))))
+      (loop for j below (length broken-text) do
+           (let* ((text-line (nth j broken-text))
+                  (images (loop for a across text-line collect (format nil "cp437-~x" (char-code a)))))
+             (loop for image in images for i from 0 do
+                  (destructuring-bind (cw ch) *cell-dimensions*
+                    (draw-image image 
+                                (* cw (+ x i))
+                                (* (+ y j) ch)
+                                cw ch r g b)))))))
