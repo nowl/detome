@@ -1,199 +1,69 @@
 (in-package #:detome)
 
-(export '(generate-dungeon))
+(defun connect-cells (cell1 cell2)
+  (let ((x-diff (- (first cell2) (first cell1)))
+        (y-diff (- (second cell2) (second cell1)))
+        choices)
+    (when (/= 0 x-diff) (push :x choices))
+    (when (/= 0 y-diff) (push :y choices))
+    
+    (let* ((choice-n (random (length choices)))
+           (choice (nth choice-n choices)))
+      (if (eq choice :y)
+          ;; do vertical
+          (let* ((run (* (signum y-diff) (1+ (random (abs y-diff)))))
+                 (next-cell (list (first cell1) (+ (second cell1) run))))
+            ;;(format t "vert 1:~a 2:~a next:~a~%" cell1 cell2 next-cell)
+            (cons cell1 (if (equal next-cell cell2)
+                            (list cell2)
+                            (connect-cells next-cell cell2))))
+          ;; do horizontal
+          (let* ((run (* (signum x-diff) (1+ (random (abs x-diff)))))
+                 (next-cell (list (+ (first cell1) run) (second cell1))))
+            ;;(format t "horz 1:~a 2:~a next:~a~%" cell1 cell2 next-cell)
+            (cons cell1 (if (equal next-cell cell2)
+                            (list cell2)
+                            (connect-cells next-cell cell2))))))))
 
-(defparameter *build-types*
-  '((hallway 10)
-    (room 1)
-    (floor-space 1)))
+;; returns list of connections to create
+(defun connect-rooms (room1 room2)
+  (let ((cell-connections (connect-cells (subseq room1 0 2)
+                                         (subseq room2 0 2))))
+    cell-connections))
 
-(defparameter *walls* nil)
+(defun find-closest-room (rooms start-x start-y)
+  (loop with closest = (car rooms) for room in (cdr rooms) do
+        (let ((curr-dist (+ (expt (- (first closest) start-x) 2)
+                            (expt (- (second closest) start-y) 2)))
+              (this-dist (+ (expt (- (first room) start-x) 2)
+                            (expt (- (second room) start-y) 2))))
+          (when (< this-dist curr-dist)
+            (setf closest room)))
+        finally (return closest)))
 
-(defun not-edge-tile (dungeon y x)
-  (let ((h (array-dimension dungeon 0))
-        (w (array-dimension dungeon 1)))
-    (and (> y 0) (> x 0) (< y (1- h)) (< x (1- w)))))
-
-(defun add-tile (dungeon type &key i j loc)
-  (destructuring-bind (y x) 
-      (cond (loc loc)
-            ((and i j) (list i j))
-            (t (error t "must pass in a valid location, received :i ~a, :j ~a, :loc ~a"
-                      i j loc)))
-    (bf:log :debug "building a ~a at ~a,~a" type y x)
-
-    ;; check for existing wall and if so then remove from *walls*
-    (when (eq (aref dungeon y x) :wall)
-      (setf *walls* 
-            (cl:delete (list y x) *walls* :test #'equalp)))
-
-    (setf (aref dungeon y x) type)
-    (when (and (eq type :wall)
-               (not-edge-tile dungeon y x))
-      (push (list y x) *walls*))))
-
-(defun random-non-edge-dungeon-tile (dungeon)
-  (let ((i (1+ (random (- (array-dimension dungeon 0) 2))))
-        (j (1+ (random (- (array-dimension dungeon 1) 2)))))
-    (list i j)))
-
-(defun build-with-surrounding-when-null (dungeon i j tile surround)
-  (loop for x from (1- j) to (1+ j) do
-       (loop for y from (1- i) to (1+ i) do
-          ;; if designated tile then place it
-            (if (and (= i y) (= j x))
-                (add-tile dungeon tile :i y :j x)
-                ;; otherwise if surrounding tile is nil then place
-                ;; surround tile
-                (if (null (aref dungeon y x))
-                    (add-tile dungeon surround :i y :j x))))))
-
-(defun generate-random-start (dungeon)
-  (destructuring-bind (i j) (random-non-edge-dungeon-tile dungeon)
-    (build-with-surrounding-when-null dungeon i j :floor :wall)))
-
-(defun select-random-wall (dungeon)
-  (let* ((wall-num (random (length *walls*)))
-         (wall (nth wall-num *walls*)))
-    (bf:log :debug "selecting wall at ~a" wall)
-    (setf *walls* (delete wall *walls* :test #'equal :start wall-num))
-    (add-tile dungeon nil :loc wall)
-    wall))
-
-#|
-(defun generate-hallway (dungeon start end)
-  (destructuring-bind (s-i s-j) start
-    (destructuring-bind (e-i e-j) end
-      (log :debug "trying to build hallway between ~a and ~a" start end)
-      (let ((points-xy (if (and (= s-i e-i)
-                                (= s-j e-j))
-                           (list (list s-j s-i))
-                           (bf::bresenham s-j s-i e-j e-i))))
-        ;; first check if each is nil
-        (loop for point-xy in points-xy do
-             (let* ((i (second point-xy))
-                    (j (first point-xy))
-                    (tile (aref dungeon i j)))
-               (when (not (null tile))
-                 (log :debug "failed to build hallway due to ~a" (list i j))
-                 (add-tile dungeon :wall :loc start)
-                 (return-from generate-hallway nil))))
-        ;; build the actual hallway
-        (loop for point-xy in points-xy do
-             (let ((i (second point-xy))
-                   (j (first point-xy)))
-               (build-with-surrounding-when-null dungeon i j :hallway :wall)))))))
-|#
-
-(defun count-nulls (dungeon loc direction)
-  (let ((i (first loc))
-        (j (second loc))
-        (h (array-dimension dungeon 0))
-        (w (array-dimension dungeon 1))
-        (count 0))
-    (ecase direction
-      (:north (loop for y from i above 0 do
-                   (if (not (null (aref dungeon y j)))
-                       (return-from count-nulls count)
-                       (incf count))))
-      (:south (loop for y from i below (1- h) do
-                   (if (not (null (aref dungeon y j)))
-                       (return-from count-nulls count)
-                       (incf count))))
-      (:east (loop for x from j below (1- w) do
-                  (if (not (null (aref dungeon i x)))
-                      (return-from count-nulls count)
-                      (incf count))))
-      (:west (loop for x from j above 0 do
-                  (if (not (null (aref dungeon i x)))
-                      (return-from count-nulls count)
-                      (incf count)))))
-    count))
-
-
-(defun find-random-direction-and-length (dungeon loc)
-  (let ((i (first loc))
-        (j (second loc))          
-        (directions-to-check '(:north :south :east :west)))
-    (loop while (not (null directions-to-check)) do
-         (let ((direction (bf:random-choice directions-to-check)))
-           (setf directions-to-check (cl:remove direction directions-to-check))
-           (ecase direction
-             (:north (when (null (aref dungeon (1- i) j))
-                       (return-from find-random-direction-and-length
-                         (values :north (count-nulls dungeon loc :north)))))
-             (:south (when (null (aref dungeon (1+ i) j))
-                       (return-from find-random-direction-and-length
-                         (values :south (count-nulls dungeon loc :south)))))
-             (:east (when (null (aref dungeon i (1+ j)))
-                      (return-from find-random-direction-and-length
-                        (values :east (count-nulls dungeon loc :east)))))
-             (:west (when (null (aref dungeon i (1- j)))
-                      (return-from find-random-direction-and-length
-                        (values :west (count-nulls dungeon loc :west))))))))
-    (values nil 0)))
-
-
-(defun generate-ortho-hallway (dungeon start)
-  (destructuring-bind (s-i s-j) start
-    (multiple-value-bind (dir length-abs) (find-random-direction-and-length dungeon start)
-      (bf:log :debug "trying to build hallway from ~a" start)
-      (if (or (null dir) (= 0 length-abs))
-          (progn
-            (bf:log :debug "failed to build hallway")
-            (add-tile dungeon :wall :loc start))
-          (progn
-            (let ((length (1+ (random length-abs))))
-              (bf:log :debug "building hallway ~a for ~a tiles" dir length)
-              ;; build the actual hallway      
-              (ecase dir
-                (:north (loop for i below length do
-                             (build-with-surrounding-when-null dungeon (- s-i i) s-j :floor :wall)))
-                (:south (loop for i below length do
-                             (build-with-surrounding-when-null dungeon (+ s-i i) s-j :floor :wall)))
-                (:east (loop for j below length do
-                            (build-with-surrounding-when-null dungeon s-i (+ s-j j) :floor :wall)))
-                (:west (loop for j below length do
-                            (build-with-surrounding-when-null dungeon s-i (- s-j j) :floor :wall))))))))))
-
-
-(defun generate-random-asset (dungeon)
-  (let ((loc (select-random-wall dungeon))
-        (type (bf:random-weighted-choice *build-types*)))
-    (bf:log :debug "trying to build ~a at ~a" type loc)
-    (ecase type
-      (room (add-tile dungeon :wall :loc loc))
-      (floor-space (build-with-surrounding-when-null dungeon (first loc) (second loc) :floor :wall))
-      (hallway (generate-ortho-hallway dungeon loc)))))
-
-(defun generate-dungeon (width height loops)
-  (let ((dungeon (make-array (list height width) :initial-element nil)))
-
-    (setf *walls* nil)
-
-    (generate-random-start dungeon)
-
-    ;; build assets
-    (loop for loop below loops do
-         (generate-random-asset dungeon))
-
-    dungeon))
-
-(defun array-map (array func)
-  (let ((new-array (make-array (array-dimensions array))))
-    (loop for i below (array-dimension array 0) do
-         (loop for j below (array-dimension array 1) do
-              (setf (aref new-array i j)
-                    (funcall func (aref array i j) i j))))
-    new-array))
-
-(defun pretty-print (dungeon)
-  (array-map dungeon
-             #'(lambda (tile i j)
-                 (declare (ignore i j))
-                 (case tile
-                   (:wall 1)
-                   (:floor 2)
-                   ;;(:hallway 3)
-                   (t 0)))))
-                     
+(defun create-dungeon (num-x-cells num-y-cells max-cell-width max-cell-height min-cell-width min-cell-height room-prob)
+  (let ((dungeon (make-array (list (* num-y-cells max-cell-height) (* num-x-cells max-cell-width))))
+        rooms)
+    (flet ((fill-cell (x y)
+                      (let ((width (+ min-cell-width (random (1+ (- max-cell-width min-cell-width)))))
+                            (height (+ min-cell-height (random (1+ (- max-cell-height min-cell-height))))))
+                        (let ((x-start (random (1+ (- max-cell-width width))))
+                              (y-start (random (1+ (- max-cell-height height)))))
+                          (loop for i from y-start below (+ y-start height) do
+                                (loop for j from x-start below (+ x-start width) do
+                                      (setf (aref dungeon (+ (* y max-cell-height) i) (+ (* x max-cell-width) j)) 1)))
+                          (list x-start y-start width height))))
+           (make-path-connecting-rooms ()
+                                       (loop for room in rooms do
+                                             (let ((x (first room))
+                                                   (y (second room)))
+                                               (format t "closest room to ~a, ~a: ~a~%" x y
+                                                       (find-closest-room (remove room rooms :test #'equal) x y))))))
+      (loop for y below num-y-cells do
+            (loop for x below num-x-cells do
+                  (when (<= (random 1.0) room-prob)
+                    (let ((params (fill-cell x y)))
+                      (push (append (list x y) params) rooms)))))
+      ;;(let ((width (random 
+      (make-path-connecting-rooms)
+      (list dungeon rooms))))

@@ -29,8 +29,8 @@
 
 (defun main-render (interpolation)
   (when (> (- (get-tick-count) *last-tick*) 1000)
-    (setf *last-tick* (get-tick-count))
-          *fps-counter* 0)
+    (setf *last-tick* (get-tick-count)
+          *fps-counter* 0))
   (incf *fps-counter*)
   (gl:clear :color-buffer-bit)
   (send-message :system-render interpolation :async)

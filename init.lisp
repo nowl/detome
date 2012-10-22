@@ -7,5 +7,3 @@
 ;;(asdf:oos 'asdf:load-op 'blacker)
 
 (asdf:oos 'asdf:load-op 'detome)
-
-(swank:set-package "BLACKER")
