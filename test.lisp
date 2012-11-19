@@ -58,6 +58,7 @@
    (concatenate 'string "system-init-" name)
    '(:system-init)
    #'(lambda (message)
+       (declare (ignore message))
        (funcall (gh meta 'system-init-function)))))
 
 (defparameter *image-loader* (make-hash-table))
@@ -68,6 +69,7 @@
 (sh *player* 
     'cell-x 2
     'cell-y 2
+    'blocked nil
     'render-level 1
     'render-img-and-clr (name-image "player")
     'box-selector '(0 0)
@@ -90,6 +92,7 @@
      (concatenate 'string "update-timed-" name)
      '(:system-update)
      #'(lambda (message)
+         (declare (ignore message))
          (let ((time (gh meta timed-symbol)))
            (when (>= *game-tick* time)
              (funcall (gh meta 'update-function))
@@ -107,8 +110,10 @@
    (concatenate 'string "update-" name)
    '(:system-update)
    #'(lambda (message)
+       (declare (ignore message))
        (funcall (gh meta 'update-function)))))
 
+#|
 (sh *player* 'update-function
     #'(lambda ()
         (let ((x (gh *player* 'cell-x)))
@@ -116,7 +121,22 @@
         nil))
 
 (make-update-component "player-update" *player*)
+|#
 
+(defmacro move-player* (move-attempt-x move-attempt-y)
+  (let ((move-x (gensym))
+        (move-y (gensym)))
+    `(let ((,move-x ,move-attempt-x)
+           (,move-y ,move-attempt-y))
+       (sh *player* 'blocked nil)
+       (send-message :movement
+                     (list ,move-x ,move-y "player")
+                     :async)
+       (when (not (gh *player* 'blocked))
+         (sh *player* 
+             'cell-x ,move-x
+             'cell-y ,move-y)))))
+  
 (make-component
  "sdl event receiver"
  '(:sdl-event)
@@ -126,10 +146,10 @@
        ((member :key-down-event (payload message))
         (case (second (member :key (payload message)))
           (:sdl-key-escape (sdl::push-quit-event))
-          (:sdl-key-a (incf (gh *player* 'cell-x) -25))
-          (:sdl-key-d (incf (gh *player* 'cell-x) 25))
-          (:sdl-key-s (incf (gh *player* 'cell-y) 25))
-          (:sdl-key-w (incf (gh *player* 'cell-y) -25))))
+          (:sdl-key-a (move-player* (1- (gh *player* 'cell-x)) (gh *player* 'cell-y)))
+          (:sdl-key-d (move-player* (1+ (gh *player* 'cell-x)) (gh *player* 'cell-y)))
+          (:sdl-key-s (move-player* (gh *player* 'cell-x) (1+ (gh *player* 'cell-y))))
+          (:sdl-key-w (move-player* (gh *player* 'cell-x) (1- (gh *player* 'cell-y))))))
        ((member :mouse-motion-event (payload message))
         (let ((x (second (member :x (payload message))))
               (y (second (member :y (payload message)))))
@@ -142,7 +162,7 @@
                   (when objs
                     (format nil "You see ~a" (gh (first objs) 'short-desc))))))))))))
                  
-(defparameter *walls* (loop for i below 2000 collect (make-hash-table)))
+(defparameter *walls* (loop for i below 500 collect (make-hash-table)))
 (defparameter *wall-names* nil)
 
 ;; build walls
@@ -160,6 +180,29 @@
        (push name *wall-names*)
        (make-renderable-component name wall)
        (add-to-world-objects wall)))
+
+;; add movement receiver
+(make-component
+ "movement check"
+ '(:movement)
+ #'(lambda (message)
+     (destructuring-bind (x y sender) (payload message)
+       (loop for wall in *walls* do
+            (when (and (eql (gh wall 'cell-x) x)
+                       (eql (gh wall 'cell-y) y)
+                       (equal sender "player"))
+              (sh *player* 'hover-object 
+                  (format nil "Blocked by ~a" (gh wall 'short-desc)))
+              (send-message :player-blocked nil :async)
+              t)))))
+
+;; add player blocked reciever
+(make-component
+ "blocked check"
+ '(:player-blocked)
+ #'(lambda (message)
+     (declare (ignore message))
+     (sh *player* 'blocked t)))
 
 (defun draw-box (x y)
   (destructuring-bind (cw ch) *cell-dimensions*
@@ -201,5 +244,15 @@
                (draw-text hover-obj
                           (1+ (first *view-cell-dimensions*)) 1 0 1 0 :fit-to (- *hud-cell-width* 2)))))))))
 
+#|
+(defparameter *dungeon*
+  (create-dungeon :num-x-sections 100 :num-y-sections 100
+                  :section-width 10 :section-height 10
+                  :min-room-width 3 :max-room-width 9
+                  :min-room-height 3 :max-room-height 9
+                  :room-prob 0.4
+                  :min-passage-length 2 :max-passage-length 10
+                  :min-num-exits 1 :max-num-exits 4))
+|#
 
 ;(mainloop)

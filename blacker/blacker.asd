@@ -12,6 +12,7 @@
   :components
   ((:file "package")
    (:file "log")
+   (:file "utils")
    (:file "engine")
    (:file "game")
    (:file "image"))

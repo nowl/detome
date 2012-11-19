@@ -11,5 +11,6 @@
   ((:file "package")
    (:file "utils")
    (:file "image-names")
-   (:file "test"))
+   ;;(:file "dungeon")
+   (:file "test"))   
   :serial t)
