@@ -8,7 +8,7 @@
                                    ,(floor (* 16 *view-size-multiplier*))))
 (defparameter *hud-cell-width* 20)
 (defparameter *view-cell-dimensions*
-  (list (- (floor (/ *screen-width* (car *cell-dimensions*))) *hud-cell-width*)
+  (list (floor (/ *screen-width* (car *cell-dimensions*)))
         (floor (/ *screen-width* (cadr *cell-dimensions*)))))
 (defparameter *num-render-levels* 3)
 (defparameter *objects-in-world* nil)
@@ -58,7 +58,8 @@
    (concatenate 'string "system-init-" name)
    '(:system-init)
    #'(lambda (message)
-       (funcall (gh meta 'system-init-function)))))
+       (funcall (gh meta 'system-init-function))
+       (sdl:enable-key-repeat 500 30))))
 
 (defparameter *image-loader* (make-hash-table))
 (sh *image-loader* 'system-init-function #'load-images)
@@ -109,13 +110,15 @@
    #'(lambda (message)
        (funcall (gh meta 'update-function)))))
 
+#|
 (sh *player* 'update-function
     #'(lambda ()
         (let ((x (gh *player* 'cell-x)))
           (sh *player* 'cell-x (+ .2 x)))
         nil))
+|#
 
-(make-update-component "player-update" *player*)
+;;(make-update-component "player-update" *player*)
 
 (make-component
  "sdl event receiver"
@@ -126,10 +129,18 @@
        ((member :key-down-event (payload message))
         (case (second (member :key (payload message)))
           (:sdl-key-escape (sdl::push-quit-event))
-          (:sdl-key-a (incf (gh *player* 'cell-x) -25))
-          (:sdl-key-d (incf (gh *player* 'cell-x) 25))
-          (:sdl-key-s (incf (gh *player* 'cell-y) 25))
-          (:sdl-key-w (incf (gh *player* 'cell-y) -25))))
+          (:sdl-key-kp1 (decf (gh *player* 'cell-x))
+                        (incf (gh *player* 'cell-y)))
+          (:sdl-key-kp3 (incf (gh *player* 'cell-x))
+                        (incf (gh *player* 'cell-y)))
+          (:sdl-key-kp7 (decf (gh *player* 'cell-x))
+                        (decf (gh *player* 'cell-y)))
+          (:sdl-key-kp9 (incf (gh *player* 'cell-x))
+                        (decf (gh *player* 'cell-y)))
+          (:sdl-key-kp4 (decf (gh *player* 'cell-x)))
+          (:sdl-key-kp6 (incf (gh *player* 'cell-x)))
+          (:sdl-key-kp8 (decf (gh *player* 'cell-y)))
+          (:sdl-key-kp2 (incf (gh *player* 'cell-y)))))
        ((member :mouse-motion-event (payload message))
         (let ((x (second (member :x (payload message))))
               (y (second (member :y (payload message)))))
@@ -142,7 +153,7 @@
                   (when objs
                     (format nil "You see ~a" (gh (first objs) 'short-desc))))))))))))
                  
-(defparameter *walls* (loop for i below 2000 collect (make-hash-table)))
+(defparameter *walls* (loop for i below 600 collect (make-hash-table)))
 (defparameter *wall-names* nil)
 
 ;; build walls
@@ -160,6 +171,18 @@
        (push name *wall-names*)
        (make-renderable-component name wall)
        (add-to-world-objects wall)))
+
+#|
+(make-component 
+ "wall-collider-watcher"
+ '(:player-movement)
+ #'(lambda (message)
+     (destructuring-bind (x y) (payload message)
+       
+       (loop for wall in *walls* do
+            
+            (send-message :render (list render-level interpolation) :async)))))
+|#
 
 (defun draw-box (x y)
   (destructuring-bind (cw ch) *cell-dimensions*
@@ -199,7 +222,7 @@
            (let ((hover-obj (gh *player* 'hover-object)))
              (when hover-obj
                (draw-text hover-obj
-                          (1+ (first *view-cell-dimensions*)) 1 0 1 0 :fit-to (- *hud-cell-width* 2)))))))))
+                          (1+ (- (first *view-cell-dimensions*) *hud-cell-width*)) 1 0 1 0 :fit-to (- *hud-cell-width* 2)))))))))
 
 
 ;(mainloop)
