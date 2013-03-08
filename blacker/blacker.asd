@@ -14,5 +14,6 @@
    (:file "log")
    (:file "engine")
    (:file "game")
-   (:file "image"))
+   (:file "image")
+   (:file "mid-disp"))
   :serial t)
